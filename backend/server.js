@@ -1,20 +1,29 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import mongoose from 'mongoose';
-
-dotenv.config();
+import express from "express";
+import mongoose, { connect } from "mongoose";
+import 'dotenv/config';
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth.routes.js";
+import connectDB from "./config/db.js";
 
 const app = express();
-const port = 5000;
 
+const port = process.env.PORT || 5000;
+connectDB();
+
+
+app.use(cookieParser());
+app.use(cors({ credentials: true }));
+
+// api end point
 app.use(express.json());
-app.get('/', (req, res) => {
-  console.log(req);
-  return res.status(200).send('Hello World!');
+
+app.get("/", (req, res) => {
+    res.send("API WORKING fine");
 });
+app.use('/api/auth', authRouter);
 
 
 app.listen(port, () => {
-  console.log(`Server is running on port: ${port}`);
-});
+    console.log(`Server is running on port ${port}`);
+}); 
