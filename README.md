@@ -16,7 +16,7 @@ Open a terminal.
 
 Navigate to the backend directory:
 
-cd backend
+`cd backend`
 
 Install dependencies:
 
@@ -28,7 +28,7 @@ Open another terminal.
 
 Navigate to the frontend project:
 
-cd frontend/clean-com
+`cd frontend/clean-com`
 
 Install dependencies:
 
