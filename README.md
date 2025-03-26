@@ -1,6 +1,6 @@
-How to Use
+# How to Use
 
-Prerequisites
+# Prerequisites
 
 Ensure you have the following installed on your system:
 
@@ -20,7 +20,7 @@ cd backend
 
 Install dependencies:
 
-npm install
+``npm install``
 
 2. Frontend Setup
 
@@ -32,7 +32,7 @@ cd frontend/clean-com
 
 Install dependencies:
 
-npm install
+``npm install``
 
 3. Running the Project
 
@@ -40,10 +40,10 @@ Start both the backend and frontend:
 
 In the backend terminal, run:
 
-npm run dev
+`npm run dev`
 
 In the frontend terminal, run:
 
-npm run dev
+`npm run dev`
 
 Your project should now be running successfully.
