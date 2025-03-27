@@ -5,6 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth.routes.js";
 import connectDB from "./config/db.js";
+import userRouter from "./routes/user.routes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
     res.send("API WORKING fine");
 });
 app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter)
 
 
 app.listen(port, () => {
