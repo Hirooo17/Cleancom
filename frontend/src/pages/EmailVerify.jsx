@@ -2,7 +2,7 @@ import React from 'react'
 
 export const EmailVerify = () => {
   return (
-    <div>emailVerify</div>
+    <div>emailVerifyyy</div>
   )
 }
 export default EmailVerify
