@@ -1,10 +1,4 @@
-It seems GitHub's Markdown renderer is having issues with your document formatting. This likely happens because of how the formatting is being copied or pasted. Let me provide a simpler approach with a very explicit step-by-step fix:
 
-1. Create a completely new README.md file
-2. Copy and paste the content below EXACTLY as-is
-3. Make sure not to introduce any invisible formatting characters
-
-Here's a simplified version that should definitely work on GitHub:
 
 ```
 # Clean-Com
