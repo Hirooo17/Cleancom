@@ -2,7 +2,7 @@
 
 A modern authentication and verification system with a clean UI.
 
-## 📋 Features
+## Features
 
 - User registration and login
 - Email verification
@@ -11,14 +11,14 @@ A modern authentication and verification system with a clean UI.
 - Toast notifications
 - OTP verification
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
 Before running this project, make sure you have the following installed:
 
-- **Node.js** (v16.x or later recommended)
-- **npm** (v8.x or later)
+- Node.js (v16.x or later recommended)
+- npm (v8.x or later)
 
 ### Installation and Setup
 
