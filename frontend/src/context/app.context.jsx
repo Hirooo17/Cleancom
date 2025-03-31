@@ -14,33 +14,56 @@ export const AppContextProvider = (props)=>{
     const [isLogin, setIsLogin] = useState(false);
     const [userData, setUserData] = useState(false);
 
-    const getAuthState = async()=>{
+    const getAuthState = async() => {
         try {
-            const {data} = await axios.get(backendUrl + "/api/auth/is-auth")
-            if(data.success){
+            const {data} = await axios.get(backendUrl + "/api/auth/is-auth", {
+                // Adding withCredentials if you're using cookies for auth
+                withCredentials: true
+            })
+            
+            if(data.success) {
                 setIsLogin(true)
-                getUserData()
+                await getUserData()
+            } else {
+                // Handle unsuccessful auth without error
+                setIsLogin(false)
             }
         } catch (error) {
-            console.log(error.message)
+            // Handle network errors or server errors silently
+            setIsLogin(false)
+            console.error("Auth check failed:", error.message)
         }
     }
-
-
-    const getUserData = async()=>{
-            try {
-                const {data} = await axios.get(backendUrl + "/api/user/data")
-                data.success ? setUserData(data.userData) :toast.error(data.message)
-            } catch (error) {
-                toast.error(error.message)
+    
+    const getUserData = async() => {
+        try {
+            const {data} = await axios.get(backendUrl + "/api/user/data", {
+                withCredentials: true
+            })
+            
+            if(data.success) {
+                setUserData(data.userData)
+            } else {
+                // Only show error toast for specific user data issues
+                toast.error(data.message)
             }
-    }
-
-    useEffect(()=>{
-        if (window.location.pathname !== "/reset-password" ) {
-            getAuthState();
+        } catch (error) {
+            // Provide more specific error message
+            toast.error("Failed to fetch user data")
+            console.error("User data fetch failed:", error.message)
         }
-    }, [])
+    }
+    
+    useEffect(() => {
+        // Check if the user has already been authenticated in this session
+        const isAuthPage = ["/login", "/signup", "/reset-password"].includes(window.location.pathname)
+        
+        if (!isAuthPage) {
+            getAuthState()
+        }
+        
+        // Add dependency array variables if they affect this logic
+    }, [/* Add dependencies here if needed */])
 
     const value ={
         backendUrl,

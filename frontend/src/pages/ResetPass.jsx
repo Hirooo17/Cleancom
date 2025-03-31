@@ -197,7 +197,7 @@ const ResetPass = () => {
               <span className="text-indigo-300 font-medium">04:32</span>
             </span>
             <button
-              onClick={onSubmitOtp}
+              
               type="button"
               className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
             >
