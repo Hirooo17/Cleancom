@@ -18,7 +18,7 @@ const allowedOrigins = [
 ]
 
 app.use(cookieParser());
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({ origin: process.env.FRONT_END_URL, credentials: true }));
 
 // api end point
 app.use(express.json());
