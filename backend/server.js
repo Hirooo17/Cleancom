@@ -20,7 +20,15 @@ const allowedOrigins = [
 
 app.use(cookieParser());
 // app.use(cors({ origin: process.env.FRONT_END_URL, credentials: true }));
-app.use(cors({origin : allowedOrigins, credentials: true }));
+app.use(
+    cors({
+      origin: process.env.FRONT_END_URL,
+      credentials: true,
+      allowedHeaders: ["Content-Type", "Authorization"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+    })
+  );
+  
 
 
 // api end point
