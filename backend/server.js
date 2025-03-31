@@ -14,7 +14,7 @@ connectDB();
 
 
 const allowedOrigins = [
-    'http://localhost:5173'
+    process.env.FRONT_END_URL
 ]
 
 app.use(cookieParser());
