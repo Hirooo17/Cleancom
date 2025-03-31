@@ -15,7 +15,7 @@ connectDB();
 // Define allowed origins - include both your production and preview URLs
 const allowedOrigins = [
     process.env.FRONT_END_URL,
-    'https://cleancom-k4kf-7ijh2m84h-heros-projects-275bb566.vercel.app',
+    'https://cleancom-k4kf.vercel.app/',
     // Add any other origins you need
 ];
 
