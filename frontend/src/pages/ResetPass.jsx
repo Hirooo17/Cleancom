@@ -16,7 +16,7 @@ const ResetPass = () => {
   const [newPassword, setNewPass] = useState("");
 
   const [isEmailSent, setIsEmailSent] = useState("");
-  const [otp, setOtp] = useState(0);
+  const [otp, setOtp] = useState("");
   const [isOtpSubmitted, setisOtpSubmitted] = useState(false);
 
 
@@ -58,7 +58,7 @@ const ResetPass = () => {
   const onSubmitNewPassword = async (e)=>{
     e.preventDefault();
     try { 
-      const {data} = await axios.post(backendUrl + '/api/auth/reset-password', {email, newPassword, otp})
+      const {data} = await axios.post(backendUrl + '/api/auth/reset-password', {email, newPassword, otp},  { withCredentials: true })
       data.success ? toast.success(data.message) : toast.error(data.message)
       data.success && navigate('/login') 
     } catch (error) {
