@@ -14,12 +14,13 @@ connectDB();
 
 
 const allowedOrigins = [
-    process.env.FRONT_END_URL
+    process.env.FRONT_END_URL,
+    'https://cleancom-k4kf.vercel.app'
 ]
 
 app.use(cookieParser());
 // app.use(cors({ origin: process.env.FRONT_END_URL, credentials: true }));
-app.use(cors({origin : ['https://cleancom-k4kf.vercel.app/']}));
+app.use(cors({origin : allowedOrigins, credentials: true }));
 
 
 // api end point
