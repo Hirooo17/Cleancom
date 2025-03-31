@@ -48,7 +48,7 @@ const ResetPass = () => {
 
 
   const onSubmitOtp = async (e)=>{
-    e.preventDefault
+    e.preventDefault();
     const otpArray = inputRefs.current.map(e => e.value)
     setOtp(otpArray.join(''))
     setisOtpSubmitted(true)
