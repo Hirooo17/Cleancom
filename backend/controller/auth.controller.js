@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../model/user.model.js';
 import transporter from '../config/node_mailer.js';
+import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from '../config/emailTemplate.js';
 
 
 
@@ -128,7 +129,8 @@ export const sendVerifiedOtp = async (req, res) => {
             from: 'BARANGAY NG MGA TILAG',
             to: user.email,
             subject: 'Account Verification',
-            text: `Your OTP  ${otp}`
+            // text: `Your OTP  ${otp}`, 
+            html: EMAIL_VERIFY_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
         }
 
         await transporter.sendMail(mailOptions);
@@ -211,7 +213,8 @@ export const resetOtp = async (req, res) => {
             from: 'BARANGAY NG MGA TILAG',
             to: user.email,
             subject: 'Password Reset OTP',
-            text: `Your OTP to reset your password is ${otp}`
+            // text: `Your OTP to reset your password is ${otp}`
+            html: PASSWORD_RESET_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
         }).catch(error => console.error("Email sending failed:", error));
 
     } catch (error) {

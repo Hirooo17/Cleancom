@@ -22,7 +22,7 @@ export const AppContextProvider = (props)=>{
                 getUserData()
             }
         } catch (error) {
-            toast.error('LOGIN FIRST')
+            console.log(error.message)
         }
     }
 
@@ -37,7 +37,9 @@ export const AppContextProvider = (props)=>{
     }
 
     useEffect(()=>{
-            getAuthState();   
+        if (window.location.pathname !== "/reset-password" ) {
+            getAuthState();
+        }
     }, [])
 
     const value ={
