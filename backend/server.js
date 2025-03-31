@@ -19,23 +19,29 @@ const allowedOrigins = [
     // Add any other origins you need
 ];
 
-// Configure CORS with more options
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl requests)
-        if (!origin) return callback(null, true);
+// // Configure CORS with more options
+// app.use(cors({
+//     origin: function (origin, callback) {
+//         // Allow requests with no origin (like mobile apps, curl requests)
+//         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-            callback(null, true);
-        } else {
-            console.log("Blocked by CORS: ", origin);
-            callback(null, false);
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+//         if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+//             callback(null, true);
+//         } else {
+//             console.log("Blocked by CORS: ", origin);
+//             callback(null, false);
+//         }
+//     },
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+// }));
+
+app.use(cors({origin : ['https://cleancom-k4kf.vercel.app']}));
+
+
+
+
 
 app.use(cookieParser());
 app.use(express.json());
