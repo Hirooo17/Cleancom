@@ -5,7 +5,7 @@ const userAuth = (req, res, next) => {
     const {token} = req.cookies;
 
     if(!token){
-        res.status(401).json({success: false,message: "Unauthorized"})
+        res.status(401).json({success: false,message: "Unauthorized"}) 
     }
 
     try {
