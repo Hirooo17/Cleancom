@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   User,
@@ -11,7 +12,7 @@ import {
   Recycle,
   Info,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 
 const GetStarted = () => {
 
@@ -82,6 +83,7 @@ const GetStarted = () => {
               </button>
               <button onClick={navigate('/report')} className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800">
                 <div className="flex items-center gap-3">
+                  
                   <MessageSquare  className="text-red-700" size={18} />
                   <span>Submit New Complaint</span>
                 </div>

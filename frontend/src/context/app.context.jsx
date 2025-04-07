@@ -1,84 +1,87 @@
+// In your AppContext
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-
 export const AppContext = createContext();
 
-
-export const AppContextProvider = (props)=>{
-
+export const AppContextProvider = (props) => {
     axios.defaults.withCredentials = true;
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [isLogin, setIsLogin] = useState(false);
-    const [userData, setUserData] = useState(false);
+    const [userData, setUserData] = useState(null); // Use null instead of false
+    const [isLoading, setIsLoading] = useState(true); // Add loading state
 
     const getAuthState = async() => {
+        setIsLoading(true);
         try {
             const {data} = await axios.get(backendUrl + "/api/auth/is-auth", {
-                // Adding withCredentials if you're using cookies for auth
                 withCredentials: true
-            })
+            });
             
             if(data.success) {
-                setIsLogin(true)
-                await getUserData()
+                setIsLogin(true);
+                await getUserData();
             } else {
-                // Handle unsuccessful auth without error
-                setIsLogin(false)
+                setIsLogin(false);
+                setUserData(null);
             }
         } catch (error) {
-            // Handle network errors or server errors silently
-            setIsLogin(false)
-            console.error("Auth check failed:", error.message)
+            // 401 errors are expected when not logged in
+            setIsLogin(false);
+            setUserData(null);
+            // Only log the error, don't show toast for auth check
+            console.error("Auth check failed:", error.message);
+        } finally {
+            setIsLoading(false);
         }
-    }
+    };
     
     const getUserData = async() => {
         try {
             const {data} = await axios.get(backendUrl + "/api/user/data", {
                 withCredentials: true
-            })
+            });
             
             if(data.success) {
-                setUserData(data.userData)
+                setUserData(data.userData);
             } else {
-                // Only show error toast for specific user data issues
-                toast.error(data.message)
+                toast.error(data.message);
             }
         } catch (error) {
-            // Provide more specific error message
-            toast.error("Failed to fetch user data")
-            console.error("User data fetch failed:", error.message)
+            // Only show toast for getUserData since this should work if user is logged in
+            toast.error("Failed to fetch user data");
+            console.error("User data fetch failed:", error.message);
         }
-    }
+    };
     
     useEffect(() => {
-        // Check if the user has already been authenticated in this session
-        const isAuthPage = ["/login", "/signup", "/reset-password"].includes(window.location.pathname)
+        // Check auth state on mount and when route changes
+        const isAuthPage = ["/login", "/signup", "/reset-password"].includes(window.location.pathname);
         
         if (!isAuthPage) {
-            getAuthState()
+            getAuthState();
+        } else {
+            // Reset loading state on auth pages
+            setIsLoading(false);
         }
-        
-        // Add dependency array variables if they affect this logic
-    }, [/* Add dependencies here if needed */])
+    }, [window.location.pathname]); // Add dependency on path changes
 
-    const value ={
+    const value = {
         backendUrl,
         isLogin,
         userData,
+        isLoading, // Expose loading state
         setIsLogin,
         setUserData,
-        getUserData
+        getUserData,
+        getAuthState // Expose this so components can trigger re-auth after login
+    };
 
-    }
-
-    return(
-        <AppContext.Provider value ={value}>
+    return (
+        <AppContext.Provider value={value}>
             {props.children}
         </AppContext.Provider>
-
-    )
-}
+    );
+};

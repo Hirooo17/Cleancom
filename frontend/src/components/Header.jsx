@@ -5,11 +5,34 @@ import { Trash2, Recycle, Leaf } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
+  const { userData, isLoading } = useContext(AppContext);
+  
   const handleGetStarted = () => {
     navigate('/get-started');
   };
   
-  const { userData } = useContext(AppContext);
+  // Create a greeting that works whether user is logged in or not
+  const renderGreeting = () => {
+    if (isLoading) {
+      return (
+        <h1 className='flex items-center justify-center gap-2 text-xl sm:text-3xl font-medium mb-2'>
+          <span className='animate-pulse bg-green-100 rounded w-32 h-8'></span>
+          <span className='flex items-center justify-center bg-green-200 rounded-full w-10 h-10'>
+            <Leaf size={24} className='text-green-600' />
+          </span>
+        </h1>
+      );
+    }
+    
+    return (
+      <h1 className='flex items-center justify-center gap-2 text-xl sm:text-3xl font-medium mb-2'>
+        Hey {userData ? userData.name : 'Eco Warrior'}!
+        <span className='flex items-center justify-center bg-green-200 rounded-full w-10 h-10'>
+          <Leaf size={24} className='text-green-600' />
+        </span>
+      </h1>
+    );
+  };
   
   return (
     <div className='bg-gradient-to-b from-green-50 to-green-100 py-16 px-4'>
@@ -19,12 +42,7 @@ const Header = () => {
           <Recycle size={80} className='text-green-600' />
         </div>
         
-        <h1 className='flex items-center justify-center gap-2 text-xl sm:text-3xl font-medium mb-2'>
-          Hey {userData ? userData.name : 'Eco Warrior'}!
-          <span className='flex items-center justify-center bg-green-200 rounded-full w-10 h-10'>
-            <Leaf size={24} className='text-green-600' />
-          </span>
-        </h1>
+        {renderGreeting()}
         
         <h2 className='text-3xl sm:text-5xl font-bold mb-6 text-green-700'>
           WELCOME TO <span className='text-green-600'>CLEAN</span>COM
@@ -43,6 +61,7 @@ const Header = () => {
           </button>
           
           <button 
+            onClick={() => navigate('/about')}
             className='border-2 border-green-600 text-green-700 font-medium rounded-full px-8 py-3 hover:bg-green-100 transition-all'
           >
             LEARN MORE

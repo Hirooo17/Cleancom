@@ -6,23 +6,26 @@ import { toast } from "react-toastify";
 import {
   LogIn,
   Recycle,
-  ChevronRight,
-  LogOut,
-  Mail,
-  User,
   Bell,
+  User,
+  Mail,
+  LogOut,
 } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { userData, setUserData, backendUrl, setIsLogin } =
+  const { userData, setUserData, backendUrl, setIsLogin, isLoading, isLogin } =
     useContext(AppContext);
 
+  // Don't return a loading or login message from Navbar
+  // Instead show appropriate content based on login state
+  
   const sendVerificationOtp = async () => {
     try {
-      axios.defaults.withCredentials = true;
       const { data } = await axios.post(
-        backendUrl + "/api/auth/send-verify-otp"
+        backendUrl + "/api/auth/send-verify-otp",
+        {},  // Empty body
+        { withCredentials: true }
       );
       if (data.success) {
         toast.success("OTP Sent Successfully");
@@ -37,11 +40,18 @@ const Navbar = () => {
 
   const logout = async () => {
     try {
-      axios.defaults.withCredentials = true;
-      const { data } = await axios.post(backendUrl + "/api/auth/logout");
-      data.success && setIsLogin(false);
-      data.success && setUserData(false);
-      navigate("/");
+      const { data } = await axios.post(
+        backendUrl + "/api/auth/logout",
+        {},  // Empty body
+        { withCredentials: true }
+      );
+      
+      if (data.success) {
+        setIsLogin(false);
+        setUserData(null);  // Use null instead of false
+        toast.success("Logged out successfully");
+        navigate("/");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred");
     }
@@ -86,7 +96,11 @@ const Navbar = () => {
       </div>
 
       {/* User section */}
-      {userData ? (
+      {isLoading ? (
+        <div className="animate-pulse bg-green-100 rounded-full px-6 py-2">
+          <div className="w-16 h-5 bg-green-200 rounded"></div>
+        </div>
+      ) : isLogin && userData ? (
         <div className="flex items-center gap-4">
           <button className="hidden sm:flex p-2 rounded-full text-green-700 hover:bg-green-50">
             <Bell size={20} />
@@ -97,7 +111,7 @@ const Navbar = () => {
               className="w-10 h-10 flex justify-center items-center rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white 
               cursor-pointer hover:from-green-600 hover:to-green-700 transition-all"
             >
-              {userData.name[0].toUpperCase()}
+              {userData.name && userData.name[0].toUpperCase()}
             </div>
 
             {/* Dropdown menu */}
@@ -121,7 +135,7 @@ const Navbar = () => {
                   </button>
                 </li>
 
-                {!userData.isverified && (
+                {userData.isverified === false && (
                   <li>
                     <button
                       onClick={sendVerificationOtp}
