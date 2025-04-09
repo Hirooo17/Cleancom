@@ -14,9 +14,16 @@ import {
 } from "lucide-react";
 
 
-const GetStarted = () => {
 
+
+const GetStarted = () => {
   const navigate = useNavigate();
+
+
+
+
+ 
+ 
 
   return (
     <div className="bg-green-50 min-h-screen p-6">
@@ -81,7 +88,8 @@ const GetStarted = () => {
                 </div>
                 <ChevronRight size={18} className="text-green-700" />
               </button>
-              <button onClick={navigate('/report')} className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800">
+
+              <button onClick={()=> navigate('/report')} className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800">
                 <div className="flex items-center gap-3">
                   
                   <MessageSquare  className="text-red-700" size={18} />
@@ -89,6 +97,7 @@ const GetStarted = () => {
                 </div>
                 <ChevronRight size={18} className="text-red-700" />
               </button>
+
               <button className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
                 <div className="flex items-center gap-3">
                   <Settings className="text-green-700" size={18} />

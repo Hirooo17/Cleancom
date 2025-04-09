@@ -66,8 +66,8 @@ export const AppContextProvider = (props) => {
             // Reset loading state on auth pages
             setIsLoading(false);
         }
-    }, [window.location.pathname]); // Add dependency on path changes
-
+    }, []); // Add dependency on path changes
+   // window.location.pathname
     const value = {
         backendUrl,
         isLogin,

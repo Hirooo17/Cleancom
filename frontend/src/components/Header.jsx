@@ -2,14 +2,31 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/app.context';
 import { Trash2, Recycle, Leaf } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { userData, isLoading } = useContext(AppContext);
+  const { userData, isLoading, isLogin, getUserData } = useContext(AppContext);
   
-  const handleGetStarted = () => {
-    navigate('/get-started');
+  
+
+  const getStartedButton =  async (e) => {
+    e.preventDefault();
+
+    try {
+        if(isLogin){
+          navigate('/get-started')
+          getUserData();
+        }
+        else{
+          toast.error("LOGIN FIRST")
+        }
+
+    } catch (error) {
+        toast.error(error.message)
+    }
   };
+
   
   // Create a greeting that works whether user is logged in or not
   const renderGreeting = () => {
@@ -54,7 +71,7 @@ const Header = () => {
         
         <div className='flex gap-4'>
           <button 
-            onClick={handleGetStarted} 
+            onClick={getStartedButton} 
             className='bg-green-600 text-white font-medium rounded-full px-8 py-3 hover:bg-green-700 transition-all shadow-md'
           >
             GET STARTED
