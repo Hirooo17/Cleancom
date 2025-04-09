@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+
 import { Camera, FileText, MapPin, Send, X, Trash2, AlertCircle, Navigation } from 'lucide-react';
 
 const ReportPage = () => {
