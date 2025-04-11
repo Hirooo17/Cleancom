@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css'; //
 import GetStarted from './pages/GetStarted'
 import Report_page from './page_user/Report_page'
 import AdminAuth from './page_admin/AdminLogin'
+import AdminAccessPin from './page_admin/AdminAccessPin'
 
 
 
@@ -24,6 +25,7 @@ const App = () => {
         <Route path='/get-started' element={<GetStarted />} />
         <Route path='/report' element={<Report_page />} />
         <Route path='/admin-login' element={<AdminAuth />}  />
+        <Route path='/admin-access-pin' element={<AdminAccessPin />} />
       </Routes>
     </div>
   )

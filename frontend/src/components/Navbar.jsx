@@ -241,7 +241,7 @@ const Navbar = () => {
                 <button
                   onClick={() => {
                     setShowLoginModal(false);
-                    navigate("/admin-login");
+                    navigate("/admin-access-pin");
                   }}
                   className="flex items-center gap-4 p-4 rounded-lg border border-green-200 hover:border-green-400 hover:bg-green-50 transition-all"
                 >

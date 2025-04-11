@@ -10,6 +10,7 @@ import trashReporRouter from "./routes/trashReport.routes.js";
 import { fileURLToPath } from 'url';
 import path from 'path';  
 import adminRouter from "./routes/admin.routes.js";
+import adminDataRouter from "./routes/admin.data.route.js";
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 app.use('/api/trash-reports', trashReporRouter );
 app.use('/api/admin', adminRouter);
+app.use('/api/admin-data', adminDataRouter);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

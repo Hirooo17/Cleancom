@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useContext, useState } from 'react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { AppContext } from '../context/app.context';
 
-const AdminAuth = () => {
+const AdminAuth = () => { 
+  const{backendUrl, setAdminIsLogin, getAdminData} = useContext(AppContext)
   const navigate = useNavigate();
   const [authState, setAuthState] = useState('login'); // 'login' or 'signup'
   const [isAnimating, setIsAnimating] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    adminKey: '' // Additional field for admin registration
-  });
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
 
   const toggleAuthState = (newState) => {
     setIsAnimating(true);
@@ -22,20 +24,12 @@ const AdminAuth = () => {
     }, 300);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Temporary frontend-only validation
-    if (authState === 'signup' && !formData.adminKey) {
-      toast.error('Admin key is required');
-      return;
-    }
-    toast.info(authState === 'login' ? 'Admin login logic would go here' : 'Admin signup logic would go here');
-  };
+ 
+
+
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-green-100 to-lime-300">
@@ -65,15 +59,15 @@ const AdminAuth = () => {
             }
           </p>
 
-          <form onSubmit={handleSubmit}>
+          <form >
             {authState === 'signup' && (
               <>
                 <div className="mb-5 flex items-center gap-3 w-full px-5 py-3 rounded-full bg-[#3A5C33] hover:bg-[#456339] transition-colors duration-300 focus-within:ring-2 focus-within:ring-indigo-400">
                   <img src={assets.person_icon} alt="Person" className="w-5 h-5" />
                   <input
                     name="name"
-                    onChange={handleChange}
-                    value={formData.name}
+                   
+                 
                     className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                     type="text"
                     placeholder="Full Name"
@@ -81,18 +75,7 @@ const AdminAuth = () => {
                   />
                 </div>
 
-                <div className="mb-5 flex items-center gap-3 w-full px-5 py-3 rounded-full bg-[#3A5C33] hover:bg-[#456339] transition-colors duration-300 focus-within:ring-2 focus-within:ring-indigo-400">
-                  <img src={assets.key_icon} alt="Key" className="w-5 h-5" />
-                  <input
-                    name="adminKey"
-                    onChange={handleChange}
-                    value={formData.adminKey}
-                    className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
-                    type="password"
-                    placeholder="Admin Secret Key"
-                    required
-                  />
-                </div>
+                
               </>
             )}
 
@@ -100,8 +83,8 @@ const AdminAuth = () => {
               <img src={assets.mail_icon} alt="Email" className="w-5 h-5" />
               <input
                 name="email"
-                onChange={handleChange}
-                value={formData.email}
+               
+                
                 className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                 type="email"
                 placeholder="Admin Email"
@@ -113,8 +96,8 @@ const AdminAuth = () => {
               <img src={assets.lock_icon} alt="Lock" className="w-5 h-5" />
               <input
                 name="password"
-                onChange={handleChange}
-                value={formData.password}
+                
+                
                 className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                 type="password"
                 placeholder="Password"

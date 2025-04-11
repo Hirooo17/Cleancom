@@ -8,10 +8,16 @@ export const AppContext = createContext();
 export const AppContextProvider = (props) => {
     axios.defaults.withCredentials = true;
 
+    // user states
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [isLogin, setIsLogin] = useState(false);
     const [userData, setUserData] = useState(null); // Use null instead of false
     const [isLoading, setIsLoading] = useState(true); // Add loading state
+
+    // admin states
+    const [adminIsLogin, setAdminIsLogin] = useState(false);
+    const [adminData, setAdminData] = useState(null); // Use null instead of false
+    const [adminIsLoading, setAdminIsLoading] = useState(true); // Add loading state
 
     const getAuthState = async() => {
         setIsLoading(true);
@@ -37,7 +43,32 @@ export const AppContextProvider = (props) => {
             setIsLoading(false);
         }
     };
-    
+
+    const getAdminAuthState = async() => {
+        setIsLoading(true);
+        try {
+            const {data} = await axios.get(backendUrl + "/api/auth/is-auth", {
+                withCredentials: true
+            });
+            
+            if(data.success) {
+                setAdminIsLogin(true);
+                await getUserData();
+            } else {
+                setAdminIsLogin(false);
+                setAdminData(null);
+            }
+        } catch (error) {
+            // 401 errors are expected when not logged in
+            setAdminIsLogin(false);
+            setAdminData(null);
+            // Only log the error, don't show toast for auth check
+            console.error("Auth check failed:", error.message);
+        } finally {
+            setAdminIsLoading(false);
+        }
+    };
+
     const getUserData = async() => {
         try {
             const {data} = await axios.get(backendUrl + "/api/user/data", {
@@ -46,6 +77,24 @@ export const AppContextProvider = (props) => {
             
             if(data.success) {
                 setUserData(data.userData);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            // Only show toast for getUserData since this should work if user is logged in
+            toast.error("Failed to fetch user data");
+            console.error("User data fetch failed:", error.message);
+        }
+    };
+
+    const getAdminData = async () => {
+        try {
+            const {data} = await axios.get(backendUrl + "/api/user/admin-data", {
+                withCredentials: true
+            });
+            
+            if(data.success) {
+                setAdminData(data.adminData);
             } else {
                 toast.error(data.message);
             }
@@ -67,16 +116,34 @@ export const AppContextProvider = (props) => {
             setIsLoading(false);
         }
     }, []); // Add dependency on path changes
-   // window.location.pathname
+
     const value = {
+       
         backendUrl,
+        //user
         isLogin,
         userData,
-        isLoading, // Expose loading state
+        isLoading,// Expose loading state
+        // admin
+        adminIsLogin,
+        adminData,
+        adminIsLoading,
+
+        //user
         setIsLogin,
         setUserData,
         getUserData,
-        getAuthState // Expose this so components can trigger re-auth after login
+        getAuthState, // Expose this so components can trigger re-auth after login
+
+        //admin
+        setAdminData,
+        setIsLoading,
+        setAdminIsLoading,
+        getAdminAuthState,
+        getAdminData,
+        setAdminIsLogin
+
+
     };
 
     return (
