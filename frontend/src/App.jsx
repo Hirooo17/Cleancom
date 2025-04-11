@@ -8,6 +8,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; //
 import GetStarted from './pages/GetStarted'
 import Report_page from './page_user/Report_page'
+import AdminAuth from './page_admin/AdminLogin'
+
 
 
 const App = () => {
@@ -21,7 +23,7 @@ const App = () => {
         <Route path='/reset-password' element={<ResetPass />} />
         <Route path='/get-started' element={<GetStarted />} />
         <Route path='/report' element={<Report_page />} />
-
+        <Route path='/admin-login' element={<AdminAuth />}  />
       </Routes>
     </div>
   )
