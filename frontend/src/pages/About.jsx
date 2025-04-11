@@ -13,6 +13,7 @@ import {
   Apple,
   Trash,
   Download,
+  MapPin,
 } from "lucide-react";
 import { assets } from "../assets/assets";
 
@@ -128,14 +129,34 @@ const AboutPage = () => {
           <h2 className="text-3xl font-bold text-gray-800 mb-6">
             Our Community Locations
           </h2>
-          <div className="h-64 bg-white rounded-xl shadow-lg">
-            {/* Empty map placeholder with better messaging */}
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <Map size={64} className="mb-4 text-gray-300" />
-              <p>Interactive community map coming soon</p>
-              <p className="text-sm mt-2">
-                Explore our green initiatives across neighborhoods
+
+          {/* OpenStreetMap Integration */}
+          <div className="h-96 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="w-full h-full relative">
+              <iframe
+                src="https://www.openstreetmap.org/export/embed.html?bbox=120.99573135375978%2C14.598184183343193%2C121.00495815277101%2C14.60375539129449&amp;layer=mapnik&amp;marker=14.600969846455223%2C121.00034475326538"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                aria-hidden="false"
+                title="Santa Mesa, Manila Map"
+              ></iframe>
+            </div>
+            <div className="bg-white py-4 px-6 border-t border-gray-200">
+              <p className="font-medium text-gray-800">
+                633 Santa Mesa, Manila
               </p>
+              <p className="text-gray-600">1008 Metro Manila</p>
+              <a
+                href="https://www.openstreetmap.org/?mlat=14.6010&amp;mlon=121.0003#map=17/14.6010/121.0003"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-green-600 hover:text-green-700 mt-2"
+              >
+                <MapPin size={16} className="mr-1" /> View Larger Map
+              </a>
             </div>
           </div>
         </div>
