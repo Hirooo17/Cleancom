@@ -41,6 +41,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
+  
   storage,
   limits: { fileSize: 5000000 }, // 5MB max file size
   fileFilter: (req, file, cb) => {
@@ -50,6 +51,7 @@ const upload = multer({
 
     if (mimetype && extname) {
       return cb(null, true);
+      
     } else {
       cb(new Error('Only image files (jpeg, jpg, png, webp) are allowed!'));
     }
@@ -57,11 +59,11 @@ const upload = multer({
 });
 
 // Routes
-trashReporRouter.get('/', getAllReports);
+trashReporRouter.get('/get-reports', getAllReports);
 trashReporRouter.get('/my-reports', userAuth, getMyReports);
-trashReporRouter.get('/:id', getReportById);
-trashReporRouter.post('/', userAuth, upload.single('photo'), createReport);
-trashReporRouter.put('/:id', userAuth, upload.single('photo'), updateReport);
-trashReporRouter.delete('/:id', userAuth, deleteReport);
+trashReporRouter.get('/report-by-id/:id', getReportById);
+trashReporRouter.post('/create-report', userAuth, upload.single('photo'), createReport);
+trashReporRouter.put('/update-report/:id', userAuth, upload.single('photo'), updateReport);
+trashReporRouter.delete('/delete-report/:id', userAuth, deleteReport);
 
 export default trashReporRouter;

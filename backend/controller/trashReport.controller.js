@@ -76,7 +76,13 @@ export const getMyReports = async (req, res) => {
 
 // Create new trash report
 export const createReport = async (req, res) => {
+ 
+
   try {
+    console.log("Received request body:", req.body);
+    console.log("Received files:", req.file);
+    console.log("User ID from auth:", req.body.userId);
+
     // Process file upload if needed
     if (!req.file) {
       return res.status(400).json({
@@ -90,15 +96,18 @@ export const createReport = async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       location: req.body.location,
-      userId: req.body.userId,
+      issueType: req.body.issueType, // Directly from form
+      userId: req.body.userId, 
       photo: `/uploads/${req.file.filename}`
     });
+  
     
     res.status(201).json({
       success: true,
       data: report
     });
   } catch (error) {
+    console.error("Error in createReport:", error);
     // Clean up uploaded file if there was an error
     if (req.file) {
       fs.unlinkSync(req.file.path);

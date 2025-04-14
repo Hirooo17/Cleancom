@@ -19,12 +19,6 @@ import {
 const GetStarted = () => {
   const navigate = useNavigate();
 
-
-
-
- 
- 
-
   return (
     <div className="bg-green-50 min-h-screen p-6">
       {/* Header section */}

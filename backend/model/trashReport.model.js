@@ -26,6 +26,11 @@ const TrashReportSchema = new mongoose.Schema({
     enum: ['Pending', 'In Progress', 'Resolved'],
     default: 'Pending'
   },
+  issueType: {
+    type: String,
+    enum: ['Littering', 'Illegal Dumping', 'Overflowing Bin', 'Other'],
+    required: [true, 'Please select an issue type']
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
