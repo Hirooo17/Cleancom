@@ -12,7 +12,7 @@ const EditReportPage = () => {
     title: '',
     description: '',
     location: '',
-    issueType: 'general',
+    issueType: 'Littering',
     photo: null
   });
   const [previewImage, setPreviewImage] = useState('');
@@ -214,9 +214,9 @@ const EditReportPage = () => {
                 onChange={(e) => setFormData({ ...formData, issueType: e.target.value })}
                 className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               >
-                <option value="general">Littering</option>
-                <option value="hazardous">Illegal Dumping</option>
-                <option value="recyclable">Other</option>
+                <option value="Literring">Littering</option>
+                <option value="Illegal Dumping">Illegal Dumping</option>
+                <option value="Other">Other</option>
                 
               </select>
             </div>
