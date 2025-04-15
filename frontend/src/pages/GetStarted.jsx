@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -12,12 +12,38 @@ import {
   Recycle,
   Info,
 } from "lucide-react";
-
-
-
+import { AppContext } from "../context/app.context";
+import axios from "axios";
 
 const GetStarted = () => {
   const navigate = useNavigate();
+
+  const { backendUrl, userData } = useContext(AppContext);
+
+  const [recentReports, setRecentReports] = useState([]);
+
+  useEffect(() => {
+    const fetchMyReports = async () => {
+      if (!userData?.id) return;
+
+      try {
+        const { data } = await axios.get(
+          backendUrl + "/api/trash-reports/my-reports/",
+          {
+            userId: userData.id, 
+          }
+        );
+
+        if (data.success) {
+          setRecentReports(data.data.slice(0, 3)); 
+        }
+      } catch (err) {
+        console.error("Failed to fetch user reports:", err);
+      }
+    };
+
+    fetchMyReports();
+  }, [userData]);
 
   return (
     <div className="bg-green-50 min-h-screen p-6">
@@ -83,10 +109,12 @@ const GetStarted = () => {
                 <ChevronRight size={18} className="text-green-700" />
               </button>
 
-              <button onClick={()=> navigate('/report')} className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800">
+              <button
+                onClick={() => navigate("/report")}
+                className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800"
+              >
                 <div className="flex items-center gap-3">
-                  
-                  <MessageSquare  className="text-red-700" size={18} />
+                  <MessageSquare className="text-red-700" size={18} />
                   <span>Submit New Complaint</span>
                 </div>
                 <ChevronRight size={18} className="text-red-700" />
@@ -124,42 +152,36 @@ const GetStarted = () => {
               Recent Reports
             </h2>
             <div className="space-y-4">
-              {[
-                {
-                  title: "Overflowing Bin",
-                  status: "In Progress",
-                  time: "1d ago",
-                  icon: Trash2,
-                },
-                {
-                  title: "Illegal Dumping",
-                  status: "Resolved",
-                  time: "3d ago",
-                  icon: Trash2,
-                },
-                {
-                  title: "Missing Recycling Bin",
-                  status: "Pending",
-                  time: "5d ago",
-                  icon: Recycle,
-                },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-4 border-b border-green-100 pb-4 last:border-0"
-                >
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <item.icon size={20} className="text-green-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-green-800">{item.title}</h4>
-                    <p className="text-green-600 text-sm">
-                      Status: {item.status}
-                    </p>
-                  </div>
-                  <span className="text-green-500 text-sm">{item.time}</span>
-                </div>
-              ))}
+              {recentReports.length === 0 ? (
+                <p className="text-green-600">You have no recent reports.</p>
+              ) : (
+                recentReports.map((item, index) => {
+                  const Icon =
+                    item.issueType === "Illegal Dumping" ? Trash2 : Recycle; // Adjust icon logic as needed
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 border-b border-green-100 pb-4 last:border-0"
+                    >
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <Icon size={20} className="text-green-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-green-800">
+                          {item.title}
+                        </h4>
+                        <p className="text-green-600 text-sm">
+                          Status: {item.status}
+                        </p>
+                      </div>
+                      <span className="text-green-500 text-sm">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <button className="mt-4 text-green-700 hover:text-green-900 text-sm font-medium">
               View all reports →
@@ -225,24 +247,14 @@ const GetStarted = () => {
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center gap-3 mb-2">
-                <Info size={20} className="text-blue-700" />
-                <h3 className="text-lg font-medium text-blue-800">
-                  Waste Collection Schedule
-                </h3>
+              <div className="flex items-center gap-3">
+                <Info size={20} className="text-blue-500" />
+                <p className="text-sm text-blue-700">
+                  Learn more about waste management and disposal guidelines in
+                  your area.
+                </p>
               </div>
-              <p className="text-blue-700 mb-2">
-                Recyclables: Monday & Thursday
-              </p>
-              <p className="text-blue-700 mb-2">
-                Organic Waste: Tuesday & Friday
-              </p>
-              <p className="text-blue-700">Non-recyclable: Wednesday</p>
             </div>
-
-            <button className="mt-6 w-full p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
-              Learn More About Waste Management
-            </button>
           </div>
         </div>
       </div>

@@ -161,7 +161,7 @@ const ReportPage = () => {
                 Issue Type <span className="text-red-500">*</span>
               </label>
               <select
-                name="category"
+                name="issueType"
                 value={complaint.issueType}
                 onChange={handleChange}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
