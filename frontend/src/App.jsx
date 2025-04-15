@@ -13,6 +13,7 @@ import AdminAccessPin from './page_admin/AdminAccessPin'
 import AboutPage from './pages/About'
 import AdminDashboard from './page_admin/AdminDashboard'
 import ViewAllReports from './page_user/View_All_Reports'
+import EditReportPage from './page_user/Edit_Report_Page'
 
 
 
@@ -32,6 +33,7 @@ const App = () => {
         <Route path='/about' element={<AboutPage />} />
         <Route path='/admin-dashboard' element={<AdminDashboard/>} />
         <Route path='/view-all-reports' element={<ViewAllReports />} />
+        <Route path='/edit-report/:id' element={<EditReportPage />} />
       </Routes>
     </div>
   )

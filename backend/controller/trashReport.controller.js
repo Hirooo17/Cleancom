@@ -164,7 +164,8 @@ export const updateReport = async (req, res) => {
     const updatedData = {
       title: req.body.title || report.title,
       description: req.body.description || report.description,
-      location: req.body.location || report.location
+      location: req.body.location || report.location,
+      issueType: req.body.issueType || report.issueType,
     };
     
     // Add photo if it was uploaded
