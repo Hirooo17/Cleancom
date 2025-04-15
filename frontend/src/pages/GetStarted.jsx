@@ -21,9 +21,12 @@ const GetStarted = () => {
   const { backendUrl, userData } = useContext(AppContext);
 
   const [recentReports, setRecentReports] = useState([]);
+  
+  
 
   useEffect(() => {
     const fetchMyReports = async () => {
+     
       if (!userData?.id) return;
 
       try {
@@ -33,17 +36,24 @@ const GetStarted = () => {
             userId: userData.id, 
           }
         );
+        
 
         if (data.success) {
-          setRecentReports(data.data.slice(0, 3)); 
+          setRecentReports(data.data); 
+          
+          
         }
       } catch (err) {
         console.error("Failed to fetch user reports:", err);
       }
+
+     
     };
 
     fetchMyReports();
   }, [userData]);
+
+  const top3Reports = recentReports.slice(0, 3);
 
   return (
     <div className="bg-green-50 min-h-screen p-6">
@@ -73,7 +83,7 @@ const GetStarted = () => {
           <h3 className="text-lg font-medium text-green-800 mb-2">
             Your Reports
           </h3>
-          <p className="text-3xl font-bold text-green-600">3</p>
+          <p className="text-3xl font-bold text-green-600">{recentReports.length}</p>
           <p className="text-green-500 mt-1">1 in progress</p>
         </div>
         <div className="bg-white p-6 rounded-xl shadow-sm border border-green-100">
@@ -101,7 +111,7 @@ const GetStarted = () => {
                 </div>
                 <ChevronRight size={18} className="text-green-700" />
               </button>
-              <button className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
+              <button onClick={() => { navigate('/view-all-reports') }} className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
                 <div className="flex items-center gap-3">
                   <FileText className="text-green-700" size={18} />
                   <span>View Reports</span>
@@ -152,10 +162,10 @@ const GetStarted = () => {
               Recent Reports
             </h2>
             <div className="space-y-4">
-              {recentReports.length === 0 ? (
+              {top3Reports.length === 0 ? (
                 <p className="text-green-600">You have no recent reports.</p>
               ) : (
-                recentReports.map((item, index) => {
+                top3Reports.map((item, index) => {
                   const Icon =
                     item.issueType === "Illegal Dumping" ? Trash2 : Recycle; // Adjust icon logic as needed
 

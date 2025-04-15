@@ -12,6 +12,7 @@ import AdminAuth from './page_admin/AdminLogin'
 import AdminAccessPin from './page_admin/AdminAccessPin'
 import AboutPage from './pages/About'
 import AdminDashboard from './page_admin/AdminDashboard'
+import ViewAllReports from './page_user/View_All_Reports'
 
 
 
@@ -30,6 +31,7 @@ const App = () => {
         <Route path='/admin-access-pin' element={<AdminAccessPin />} />
         <Route path='/about' element={<AboutPage />} />
         <Route path='/admin-dashboard' element={<AdminDashboard/>} />
+        <Route path='/view-all-reports' element={<ViewAllReports />} />
       </Routes>
     </div>
   )
