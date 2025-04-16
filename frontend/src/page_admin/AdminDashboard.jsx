@@ -27,49 +27,62 @@ const AdminDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { backendUrl, adminData } = useContext(AppContext);
-  const [recentReports, setRecentReports] = useState([]);
+  const [allReports, setAllReports] = useState([]); // Store ALL reports
   const [isLoadingReports, setIsLoadingReports] = useState(true);
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        console.log("Starting fetch with token:", adminData?.token ? "Token exists" : "No token");
-        console.log("Using URL:", `${backendUrl}/api/trash-reports/get-reports`);
-        
-        const response = await axios.get(
-          `${backendUrl}/api/trash-reports/get-reports`,
-          {
-            headers: {
-              Authorization: `Bearer ${adminData?.token}`,
-            },
-          }
-        );
-  
-        console.log("Fetched reports:", response.data);
-  
-        const reportsArray = response.data?.data || [];
-        console.log("Reports array length:", reportsArray.length);
-        
-        const recentThreeReports = reportsArray
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 3);
-        setRecentReports(recentThreeReports);
-      } catch (error) {
-        console.error("Failed to fetch reports:", error);
-        console.error("Error details:", error.response ? error.response.data : "No response data");
-        console.error("Error status:", error.response ? error.response.status : "No status");
-      } finally {
-        setIsLoadingReports(false);
-      }
-    };
-  
-   
-      fetchReports();
-   
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const [currentPage, setCurrentPage] = useState(1);
+  const reportsPerPage = 5;
+
+ // Fetch ALL reports
+useEffect(() => {
+  const fetchReports = async () => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/trash-reports/get-reports`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+
+      const reportsArray = response.data?.data || [];
+      // Store ALL reports sorted by date (newest first)
+      const sortedReports = reportsArray
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAllReports(sortedReports);
+      
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
+  fetchReports();
+}, []);
+
+// Get recent 3 reports for dashboard
+const recentReports = allReports.slice(0, 3);
+
+// Filter logic for reports tab
+const getFilteredReports = () => {
+  return allReports.filter(report => {
+    const matchesSearch = searchTerm === '' || 
+      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (report.userId?.name && report.userId.name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-     
+    const matchesStatus = statusFilter === 'All Statuses' || report.status === statusFilter;
     
-  }, []);
+    return matchesSearch && matchesStatus;
+  });
+};
+
+
+
 
   // Sample data
   const stats = {
@@ -128,6 +141,7 @@ const AdminDashboard = () => {
   ];
 
   const renderDashboard = () => (
+
     <div className="space-y-8">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -298,140 +312,215 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const renderReports = () => (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
-          User Reports
-        </h2>
-        <div className="flex flex-col xs:flex-row gap-2">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+  // RENDER REPORTS SECTION TRALALEROTRALALA
+
+  // Filter reports based on search term and status
+ 
+
+  
+  
+
+  const renderReports = () => {
+    const filteredReports = getFilteredReports();
+    const indexOfLastReport = currentPage * reportsPerPage;
+    const indexOfFirstReport = indexOfLastReport - reportsPerPage;
+    const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
+    const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
+    
+  
+    const handleSearchChange = (e) => {
+      setSearchTerm(e.target.value);
+      setCurrentPage(1);
+    };
+    
+    const handleStatusChange = (e) => {
+      setStatusFilter(e.target.value);
+      setCurrentPage(1);
+    };
+    
+    const goToNextPage = () => {
+      if (currentPage < totalPages) {
+        setCurrentPage(currentPage + 1);
+      }
+    };
+    
+    const goToPreviousPage = () => {
+      if (currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
+            User Reports
+          </h2>
+          <div className="flex flex-col xs:flex-row gap-2">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search reports..."
+                className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full"
+              />
             </div>
-            <input
-              type="text"
-              placeholder="Search reports..."
-              className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full"
-            />
+            <select 
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className="pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-no-repeat bg-right"
+            >
+              <option>All Statuses</option>
+              <option>Pending</option>
+              <option>In Progress</option>
+              <option>Resolved</option>
+            </select>
           </div>
-          <select className="pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-no-repeat bg-right">
-            <option>All Statuses</option>
-            <option>Pending</option>
-            <option>In Progress</option>
-            <option>Resolved</option>
-          </select>
         </div>
+  
+        {isLoadingReports ? (
+          <div className="flex justify-center items-center py-10">
+            <div className="text-gray-400">Loading reports...</div>
+          </div>
+        ) : filteredReports.length === 0 ? (
+          <div className="flex justify-center items-center py-10">
+            <div className="text-gray-400">No reports found</div>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      ID
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Title
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
+                    >
+                      Location
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentReports.map((report) => (
+                    <tr key={report._id} className="hover:bg-gray-50">
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
+                        #{report._id?.substring(0, 6)}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                        <div className="font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">
+                          {report.title}
+                        </div>
+                        <div className="text-2xs xs:text-xs text-gray-400 mt-1 truncate max-w-[120px] sm:max-w-none">
+                          {report.userId?.name || "Unknown"}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
+                        {report.location}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full ${
+                            report.status === "Pending"
+                              ? "bg-amber-100 text-amber-800"
+                              : report.status === "In Progress"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {report.status}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                        <button className="text-emerald-600 hover:text-emerald-900 mr-2 sm:mr-3">
+                          View
+                        </button>
+                        <button className="text-gray-600 hover:text-gray-900 hidden xs:inline">
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+  
+            <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
+              <div className="text-xs sm:text-sm text-gray-500">
+                Showing <span className="font-medium">{indexOfFirstReport + 1}</span> to{" "}
+                <span className="font-medium">
+                  {Math.min(indexOfLastReport, filteredReports.length)}
+                </span> of{" "}
+                <span className="font-medium">{filteredReports.length}</span> results
+              </div>
+              <div className="flex space-x-1 sm:space-x-2">
+                <button 
+                  onClick={goToPreviousPage} 
+                  disabled={currentPage === 1}
+                  className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                    currentPage === 1 
+                      ? "text-gray-400 bg-gray-50" 
+                      : "text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />{" "}
+                  Prev
+                </button>
+                <button 
+                  onClick={goToNextPage} 
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                    currentPage === totalPages || totalPages === 0
+                      ? "text-gray-400 bg-gray-50" 
+                      : "text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  Next{" "}
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                ID
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Title
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
-              >
-                Location
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell"
-              >
-                Date
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {recentReports.map((report) => (
-              <tr key={report._id} className="hover:bg-gray-50">
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                  #{report._id}
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                  <div className="font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">
-                    {report.title}
-                  </div>
-                  <div className="text-2xs xs:text-xs text-gray-400 mt-1 truncate max-w-[120px] sm:max-w-none">
-                    {report.userId?.name || "Unknown"}
-                  </div>
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
-                  {report.location}
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
-                  <span
-                    className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full ${
-                      report.status === "Pending"
-                        ? "bg-amber-100 text-amber-800"
-                        : report.status === "In Progress"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-green-100 text-green-800"
-                    }`}
-                  >
-                    {report.status}
-                  </span>
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
-                  {new Date(report.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                  <button className="text-emerald-600 hover:text-emerald-900 mr-2 sm:mr-3">
-                    View
-                  </button>
-                  <button className="text-gray-600 hover:text-gray-900 hidden xs:inline">
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
-        <div className="text-xs sm:text-sm text-gray-500">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">5</span> of{" "}
-          <span className="font-medium">12</span> results
-        </div>
-        <div className="flex space-x-1 sm:space-x-2">
-          <button className="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />{" "}
-            Prev
-          </button>
-          <button className="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Next{" "}
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderUsers = () => (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
