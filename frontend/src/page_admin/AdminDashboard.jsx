@@ -33,8 +33,12 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+
   const reportsPerPage = 5;
 
+
+  
  // Fetch ALL reports
 useEffect(() => {
   const fetchReports = async () => {
@@ -48,11 +52,20 @@ useEffect(() => {
         }
       );
 
+       // Fetch total users (you'll need to create this endpoint)
+       const usersResponse = await axios.get(
+        `${backendUrl}/api/auth/count`,
+        { headers: { Authorization: `Bearer ${adminData?.token}` } }
+      );
+
       const reportsArray = response.data?.data || [];
       // Store ALL reports sorted by date (newest first)
       const sortedReports = reportsArray
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setAllReports(sortedReports);
+
+      setAllReports(sortedReports);
+      setTotalUsers(usersResponse.data.count || 0);
       
     } catch (error) {
       console.error("Failed to fetch reports:", error);
@@ -63,6 +76,13 @@ useEffect(() => {
 
   fetchReports();
 }, []);
+
+
+
+
+
+
+
 
 // Get recent 3 reports for dashboard
 const recentReports = allReports.slice(0, 3);
@@ -82,15 +102,35 @@ const getFilteredReports = () => {
 };
 
 
+// const calculateStats = () => {
+//   // Get all user IDs from reports
+//   const allUserIds = allReports.map(report => report.userId?.toString());
+  
+//   // Get unique user IDs by creating a Set (which automatically removes duplicates)
+//   const uniqueUserIds = [...new Set(allUserIds.filter(Boolean))];
+  
+//   return {
+//     totalReports: allReports.length,
+//     pendingReports: allReports.filter(report => report.status === 'Pending').length,
+//     resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
+//     totalUsers: uniqueUserIds.length // Count of unique users who submitted reports
+//   };
+// };
 
+// const stats = calculateStats();
 
-  // Sample data
-  const stats = {
-    totalUsers: 235,
-    totalReports: 142,
-    pendingReports: 27,
-    resolvedReports: 115,
+const calculateStats = () => {
+  return {
+    totalReports: allReports.length,
+    pendingReports: allReports.filter(report => report.status === 'Pending').length,
+    resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
+    totalUsers: totalUsers // Now using the real user count
   };
+};
+
+const stats = calculateStats();
+
+ 
 
   const announcements = [
     {
