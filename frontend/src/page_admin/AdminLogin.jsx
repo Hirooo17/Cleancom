@@ -4,11 +4,12 @@ import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/app.context";
+import axios from "axios";
 
 const AdminAuth = () => {
   const { backendUrl, setAdminIsLogin, getAdminData } = useContext(AppContext);
   const navigate = useNavigate();
-  const [authState, setAuthState] = useState("login"); // 'login' or 'signup'
+  const [authState, setAuthState] = useState("signup"); // 'login' or 'signup'
   const [isAnimating, setIsAnimating] = useState(false);
 
   const [name, setName] = useState("");
@@ -25,11 +26,35 @@ const AdminAuth = () => {
 
 
   const onSubmitHandler = async (e) => {
-    if (authState === 'signup'){
-      navigate('/admin-dashboard')
-    } else{
-      navigate('/admin-dashboard')
+    try {
+      e.preventDefault();
+
+      axios.defaults.withCredentials = true;
+
+      if (authState === 'signup') {
+        const { data } = await axios.post(backendUrl + '/api/admin/admin-register', { name, email, password });
+        if (data.success) {
+          setAdminIsLogin(true);
+          getAdminData();
+          navigate('/admin-dashboard');
+        } else {
+          toast.error(data.response?.data?.message || "An error occurred"); 
+        }
+      } else {
+        const { data } = await axios.post(backendUrl + '/api/admin/admin-login', { email, password });
+        if (data.success) {
+          setAdminIsLogin(true);
+          getAdminData();
+          navigate('/admin-dashboard');
+        } else {
+          toast.error(data.response?.data?.message || "An error occurred"); 
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "An error occurred"); 
     }
+
+   
   }
 
   return (
@@ -76,6 +101,7 @@ const AdminAuth = () => {
                     name="name"
                     className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                     type="text"
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Full Name"
                     required
                   />
@@ -89,6 +115,7 @@ const AdminAuth = () => {
                 name="email"
                 className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                 type="email"
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Admin Email"
                 required
               />
@@ -100,6 +127,7 @@ const AdminAuth = () => {
                 name="password"
                 className="bg-transparent outline-none w-full text-white placeholder-indigo-200/60"
                 type="password"
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
               />

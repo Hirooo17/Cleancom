@@ -11,6 +11,8 @@ import {
   Trash2,
   Recycle,
   Info,
+  FormInputIcon,
+  Printer,
 } from "lucide-react";
 import { AppContext } from "../context/app.context";
 import axios from "axios";
@@ -132,8 +134,8 @@ const GetStarted = () => {
 
               <button className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
                 <div className="flex items-center gap-3">
-                  <Settings className="text-green-700" size={18} />
-                  <span>Account Settings</span>
+                  <Printer className="text-green-700" size={18} />
+                  <span>Print a Formal Complaint</span>
                 </div>
                 <ChevronRight size={18} className="text-green-700" />
               </button>

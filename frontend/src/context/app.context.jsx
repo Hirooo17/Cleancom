@@ -107,7 +107,7 @@ export const AppContextProvider = (props) => {
     
     useEffect(() => {
         // Check auth state on mount and when route changes
-        const isAuthPage = ["/login", "/signup", "/reset-password"].includes(window.location.pathname);
+        const isAuthPage = ["/login", "/signup", "/reset-password","/admin-dashboard", "admin-login"].includes(window.location.pathname);
         
         if (!isAuthPage) {
             getAuthState();
