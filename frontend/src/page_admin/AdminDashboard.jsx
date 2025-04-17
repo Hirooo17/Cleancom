@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { AppContext } from "../context/app.context";
+import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -30,12 +31,21 @@ const AdminDashboard = () => {
   const [allReports, setAllReports] = useState([]); // Store ALL reports
   const [isLoadingReports, setIsLoadingReports] = useState(true);
 
+  // reports variables
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
 
   const reportsPerPage = 5;
+
+
+  // user tab  varibles
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [searchUserTerm, setSearchUserTerm] = useState("");
+  const [currentUserPage, setCurrentUserPage] = useState(1);
+  const usersPerPage = 5;
 
 
   
@@ -58,6 +68,21 @@ useEffect(() => {
         { headers: { Authorization: `Bearer ${adminData?.token}` } }
       );
 
+
+
+      const userPage = await axios.get(
+        `${backendUrl}/api/auth/users`, // You'll need to create this endpoint
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+
+     
+      
+      setUsers(userPage.data);
+
       const reportsArray = response.data?.data || [];
       // Store ALL reports sorted by date (newest first)
       const sortedReports = reportsArray
@@ -71,6 +96,7 @@ useEffect(() => {
       console.error("Failed to fetch reports:", error);
     } finally {
       setIsLoadingReports(false);
+      setIsLoadingUsers(false);
     }
   };
 
@@ -102,22 +128,7 @@ const getFilteredReports = () => {
 };
 
 
-// const calculateStats = () => {
-//   // Get all user IDs from reports
-//   const allUserIds = allReports.map(report => report.userId?.toString());
-  
-//   // Get unique user IDs by creating a Set (which automatically removes duplicates)
-//   const uniqueUserIds = [...new Set(allUserIds.filter(Boolean))];
-  
-//   return {
-//     totalReports: allReports.length,
-//     pendingReports: allReports.filter(report => report.status === 'Pending').length,
-//     resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
-//     totalUsers: uniqueUserIds.length // Count of unique users who submitted reports
-//   };
-// };
 
-// const stats = calculateStats();
 
 const calculateStats = () => {
   return {
@@ -149,36 +160,7 @@ const stats = calculateStats();
     },
   ];
 
-  const users = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john_doe@example.com",
-      joinDate: "2025-01-15",
-      reports: 5,
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane_smith@example.com",
-      joinDate: "2025-02-03",
-      reports: 3,
-    },
-    {
-      id: 3,
-      name: "Mark Wilson",
-      email: "mark_wilson@example.com",
-      joinDate: "2025-02-15",
-      reports: 7,
-    },
-    {
-      id: 4,
-      name: "Sarah Jones",
-      email: "sarah_jones@example.com",
-      joinDate: "2025-03-20",
-      reports: 2,
-    },
-  ];
+  
 
   const renderDashboard = () => (
 
@@ -562,7 +544,52 @@ const stats = calculateStats();
     );
   };
 
-  const renderUsers = () => (
+  // RENDER USERS SECTION TRALALEROTRALALA
+
+  // Filter users based on search term
+
+  
+
+// RENDER USERS SECTION
+
+// Filter users based on search term
+const getFilteredUsers = () => {
+  return users.filter(user => 
+    user.name.toLowerCase().includes(searchUserTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchUserTerm.toLowerCase())
+  );
+};
+
+// Pagination logic
+const paginateUsers = (users) => {
+  const indexOfLastUser = currentUserPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  return users.slice(indexOfFirstUser, indexOfLastUser);
+};
+
+const renderUsers = () => {
+  const filteredUsers = getFilteredUsers();
+  const currentUsers = paginateUsers(filteredUsers);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  const handleSearchChange = (e) => {
+    setSearchUserTerm(e.target.value);
+    setCurrentUserPage(1);
+  };
+
+  const goToNextPage = () => {
+    if (currentUserPage < totalPages) {  // Fixed: use currentUserPage instead of currentPage
+      setCurrentUserPage(currentUserPage + 1);  // Fixed: use currentUserPage instead of currentPage
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentUserPage > 1) {  // Fixed: use currentUserPage instead of currentPage
+      setCurrentUserPage(currentUserPage - 1);  // Fixed: use currentUserPage instead of currentPage
+    }
+  };
+
+  return (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
         <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
@@ -574,107 +601,146 @@ const stats = calculateStats();
           </div>
           <input
             type="text"
+            value={searchUserTerm}
+            onChange={handleSearchChange}
             placeholder="Search users..."
             className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                User
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
-              >
-                Email
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell"
-              >
-                Joined
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Reports
-              </th>
-              <th
-                scope="col"
-                className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium">
-                      {user.name.charAt(0)}
-                    </div>
-                    <div className="ml-2 sm:ml-4 min-w-0">
-                      <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
-                        {user.name}
+      {isLoadingUsers ? (
+        <div className="flex justify-center items-center py-10">
+          <div className="text-gray-400">Loading users...</div>
+        </div>
+      ) : filteredUsers.length === 0 ? (
+        <div className="flex justify-center items-center py-10">
+          <div className="text-gray-400">
+            {searchUserTerm ? "No matching users found" : "No users available"}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              {/* Table Head - unchanged from your code */}
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentUsers.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium">
+                          {user.name.charAt(0)}
+                        </div>
+                        <div className="ml-2 sm:ml-4 min-w-0">
+                          <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                            {user.name}
+                            {!user.isverified && (
+                              <span className="ml-1 text-2xs text-amber-500">(unverified)</span>
+                            )}
+                          </div>
+                          <div className="text-2xs xs:text-xs text-gray-500 truncate sm:hidden">
+                            {user.email}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-2xs xs:text-xs text-gray-500 truncate sm:hidden">
-                        {user.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
-                  {user.email}
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
-                  {user.joinDate}
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
-                  <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                    {user.reports} {window.innerWidth > 640 ? "reports" : ""}
-                  </span>
-                </td>
-                <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                  <button className="text-emerald-600 hover:text-emerald-900">
-                    View
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
+                      {user.email}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
+                      {user.joinDate}
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
+                      <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {user.reportCount} {window.innerWidth > 640 ? "reports" : ""}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                      <button 
+                        className="text-emerald-600 hover:text-emerald-900 mr-2"
+                        onClick={() => handleViewUser(user._id)}
+                      >
+                        View
+                      </button>
+                      <button 
+                        className="text-gray-600 hover:text-gray-900"
+                        onClick={() => handleDeleteUser(user._id)}
+                      >
+                        Ban
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
-        <div className="text-xs sm:text-sm text-gray-500">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">4</span> of{" "}
-          <span className="font-medium">4</span> results
-        </div>
-        <div className="flex space-x-1 sm:space-x-2">
-          <button className="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />{" "}
-            Prev
-          </button>
-          <button className="inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Next{" "}
-            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
-          </button>
-        </div>
-      </div>
+          <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
+            <div className="text-xs sm:text-sm text-gray-500">
+              Showing <span className="font-medium">
+              {Math.min(currentUserPage * usersPerPage, filteredUsers.length)} 
+              </span> to{" "}
+              <span className="font-medium">
+              {Math.min(currentUserPage * usersPerPage, filteredUsers.length)}
+              </span> of{" "}
+              <span className="font-medium">{filteredUsers.length}</span> results
+            </div>
+            <div className="flex space-x-1 sm:space-x-2">
+              <button 
+                onClick={goToPreviousPage} 
+                disabled={currentUserPage === 1}
+                className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                  currentPage === 1 
+                    ? "text-gray-400 bg-gray-50" 
+                    : "text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" /> Prev
+              </button>
+              <button 
+                onClick={goToNextPage} 
+                disabled={currentUserPage === totalPages || totalPages === 0} 
+                className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                  currentPage === totalPages || totalPages === 0
+                    ? "text-gray-400 bg-gray-50" 
+                    : "text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                Next <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
+};
+
+// You'll need to implement these handlers
+const handleViewUser = (userId) => {
+  // Navigate to user detail view or show modal
+  console.log("View user:", userId);
+};
+
+const handleDeleteUser = (userId) => {
+  if (window.confirm("Are you sure you want to ban this user?")) {
+    axios.delete(`${backendUrl}/api/auth/delete-users/${userId}`, {
+      headers: { Authorization: `Bearer ${adminData?.token}` }
+    })
+    .then(() => {
+      setUsers(users.filter(user => user.id !== userId));
+      toast.success("User banned successfully");
+    })
+    .catch(error => {
+      console.error("Failed to ban user:", error);
+      toast.error("Failed to ban user");
+    });
+  }
+};
+
+
+  
 
   const renderAnnouncements = () => (
     <div className="space-y-4 sm:space-y-6">

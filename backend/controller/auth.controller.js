@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import userModel from '../model/user.model.js';
 import transporter from '../config/node_mailer.js';
 import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from '../config/emailTemplate.js';
+import trashReportModel from '../model/trashReport.model.js';
 
 
 
@@ -274,6 +275,40 @@ export const countUsers = async (req, res) => {
     try {
       const count = await userModel.countDocuments();
       res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+
+
+  
+// In your auth controller (auth.controller.js)
+export const getUsers = async (req, res) => {
+    try {
+      const users = await userModel.find().select('-password -verifyOTP -resetOTP');
+      
+      // Get report counts for each user
+      const usersWithReportCounts = await Promise.all(
+        users.map(async (user) => {
+          const reportCount = await trashReportModel.countDocuments({ userId: user._id });
+          return {
+            ...user._doc,
+            reportCount,
+            joinDate: new Date(user.createdAt).toLocaleDateString()
+          };
+        })
+      );
+      
+      res.json(usersWithReportCounts);
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+  
+  export const deleteUser = async (req, res) => {
+    try {
+      await userModel.findByIdAndDelete(req.params.id);
+      res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: 'Server error' });
     }

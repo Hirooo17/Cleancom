@@ -1,5 +1,5 @@
 import express from "express";
-import { countUsers, isAuthenticated, login, logout, register, resetOtp, resetPassword, sendVerifiedOtp, verifyEmai } from "../controller/auth.controller.js";
+import { countUsers, deleteUser, getUsers, isAuthenticated, login, logout, register, resetOtp, resetPassword, sendVerifiedOtp, verifyEmai } from "../controller/auth.controller.js";
 import userAuth from "../middleware/user.auth.js";
 
 
@@ -16,9 +16,6 @@ authRouter.post('/send-reset-otp', resetOtp );
 authRouter.post('/reset-password', resetPassword );
 authRouter.get('/count', countUsers)
 
-
-
-
-
-
+authRouter.get('/users', getUsers);
+authRouter.delete('/delete-users/:id', deleteUser);
 export default authRouter;
