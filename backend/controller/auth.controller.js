@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../model/user.model.js';
 import transporter from '../config/node_mailer.js';
+import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from '../config/emailTemplate.js';
+import trashReportModel from '../model/trashReport.model.js';
 
 
 
@@ -128,7 +130,8 @@ export const sendVerifiedOtp = async (req, res) => {
             from: 'BARANGAY NG MGA TILAG',
             to: user.email,
             subject: 'Account Verification',
-            text: `Your OTP  ${otp}`
+            // text: `Your OTP  ${otp}`, 
+            html: EMAIL_VERIFY_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
         }
 
         await transporter.sendMail(mailOptions);
@@ -211,7 +214,8 @@ export const resetOtp = async (req, res) => {
             from: 'BARANGAY NG MGA TILAG',
             to: user.email,
             subject: 'Password Reset OTP',
-            text: `Your OTP to reset your password is ${otp}`
+            // text: `Your OTP to reset your password is ${otp}`
+            html: PASSWORD_RESET_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
         }).catch(error => console.error("Email sending failed:", error));
 
     } catch (error) {
@@ -265,3 +269,47 @@ export const resetPassword = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
+export const countUsers = async (req, res) => {
+    try {
+      const count = await userModel.countDocuments();
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+
+
+  
+// In your auth controller (auth.controller.js)
+export const getUsers = async (req, res) => {
+    try {
+      const users = await userModel.find().select('-password -verifyOTP -resetOTP');
+      
+      // Get report counts for each user
+      const usersWithReportCounts = await Promise.all(
+        users.map(async (user) => {
+          const reportCount = await trashReportModel.countDocuments({ userId: user._id });
+          return {
+            ...user._doc,
+            reportCount,
+            joinDate: new Date(user.createdAt).toLocaleDateString()
+          };
+        })
+      );
+      
+      res.json(usersWithReportCounts);
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+  
+  export const deleteUser = async (req, res) => {
+    try {
+      await userModel.findByIdAndDelete(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };

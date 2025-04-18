@@ -6,6 +6,9 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 const Login = () => {
 
+
+
+
   const navigate = useNavigate();
   const { backendUrl, setIsLogin, getUserData } = useContext(AppContext);
   const [state, setState] = useState('Sign Up');
@@ -13,6 +16,8 @@ const Login = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  
   const toggleState = (newState) => {
     setIsAnimating(true);
     setTimeout(() => {
@@ -35,7 +40,7 @@ const Login = () => {
           getUserData();
           navigate('/');
         } else {
-          toast.error(error.response?.data?.message || "An error occurred"); 
+          toast.error(data.response?.data?.message || "An error occurred"); 
         }
       } else {
         const { data } = await axios.post(backendUrl + '/api/auth/login', { email, password });
@@ -44,7 +49,7 @@ const Login = () => {
           getUserData();
           navigate('/');
         } else {
-          toast.error(error.response?.data?.message || "An error occurred"); 
+          toast.error(data.response?.data?.message || "An error occurred"); 
         }
       }
     } catch (error) {
