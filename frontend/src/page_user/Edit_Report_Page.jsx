@@ -29,7 +29,7 @@ const EditReportPage = () => {
         );
         if (data.success) {
           // Find the specific report based on `id`
-          const report = data.data.find(report => report._id === id); // Assuming `id` is from URL or state
+          const report = data.data.find(report => report._id === id);
           if (report) {
             setFormData({
               title: report.title,
@@ -38,7 +38,16 @@ const EditReportPage = () => {
               issueType: report.issueType,
               photo: null
             });
-            setPreviewImage(report.photo || '');
+            
+            // Set the preview image with the full backend URL path
+            if (report.photo) {
+              // Check if the photo already has the backend URL
+              if (report.photo.startsWith('http')) {
+                setPreviewImage(report.photo);
+              } else {
+                setPreviewImage(`${backendUrl}${report.photo}`);
+              }
+            }
           } else {
             setError('Report not found');
           }
@@ -50,12 +59,13 @@ const EditReportPage = () => {
     };
   
     fetchMyReports();
-  }, [userData, id]); // Run whenever userData or id changes
+  }, [userData, id, backendUrl]); // Added backendUrl to dependencies
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setFormData(prev => ({ ...prev, photo: file }));
+      // Create a local object URL for the preview
       setPreviewImage(URL.createObjectURL(file));
     }
   };
@@ -75,7 +85,6 @@ const EditReportPage = () => {
       if (formData.photo) {
         formPayload.append('photo', formData.photo);
       }
-      console.log(formPayload); // Add this to check the form data being sent
 
       const { data } = await axios.put(
         `${backendUrl}/api/trash-reports/update-report/${id}`,
@@ -214,10 +223,9 @@ const EditReportPage = () => {
                 onChange={(e) => setFormData({ ...formData, issueType: e.target.value })}
                 className="w-full px-4 py-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               >
-                <option value="Literring">Littering</option>
+                <option value="Littering">Littering</option>
                 <option value="Illegal Dumping">Illegal Dumping</option>
                 <option value="Other">Other</option>
-                
               </select>
             </div>
           </div>
