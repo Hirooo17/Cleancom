@@ -50,7 +50,7 @@ export const adminRegister = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
-}
+}              
 
 export const adminLogin = async (req, res) => {
     const { email, password } = req.body;

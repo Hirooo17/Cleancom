@@ -18,6 +18,7 @@ import {
   User,
   Menu,
   X,
+  XIcon,
 } from "lucide-react";
 import axios from "axios";
 import { AppContext } from "../context/app.context";
@@ -36,6 +37,10 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
+      // State for the report view modal
+      const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+      const [selectedReport, setSelectedReport] = useState(null);
+      const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const reportsPerPage = 5;
 
@@ -349,6 +354,7 @@ const stats = calculateStats();
     const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
     const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
     
+
   
     const handleSearchChange = (e) => {
       setSearchTerm(e.target.value);
@@ -369,6 +375,57 @@ const stats = calculateStats();
     const goToPreviousPage = () => {
       if (currentPage > 1) {
         setCurrentPage(currentPage - 1);
+      }
+    };
+
+    const openViewModal = (report) => {
+      setSelectedReport(report);
+      setIsViewModalOpen(true);
+    };
+
+    const closeViewModal = () => {
+      setIsViewModalOpen(false);
+      setSelectedReport(null);
+    };
+
+    const updateReportStatus = async (newStatus) => {
+      if (!selectedReport) return;
+      
+      setUpdatingStatus(true);
+      try {
+        const response = await axios.put(
+          `${backendUrl}/api/trash-reports/update-report/${selectedReport._id}`,
+          { 
+            status: newStatus,
+            userId: adminData?._id, // Include admin's ID
+            isAdmin: true // Add flag to indicate this is an admin action
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${adminData?.token}`,
+            },
+          }
+        );
+        
+        if (response.data.success) {
+          // Update the report in the local state
+          const updatedReports = allReports.map(report => 
+            report._id === selectedReport._id 
+              ? { ...report, status: newStatus } 
+              : report
+          );
+          
+          setAllReports(updatedReports);
+          setSelectedReport({ ...selectedReport, status: newStatus });
+          
+          // Show success message
+          alert(`Report status updated to ${newStatus}`);
+        }
+      } catch (error) {
+        console.error("Failed to update report status:", error);
+        alert("Failed to update report status: " + (error.response?.data?.message || error.message));
+      } finally {
+        setUpdatingStatus(false);
       }
     };
 
@@ -396,10 +453,10 @@ const stats = calculateStats();
               onChange={handleStatusChange}
               className="pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-no-repeat bg-right"
             >
-              <option>All Statuses</option>
-              <option>Pending</option>
-              <option>In Progress</option>
-              <option>Resolved</option>
+              <option value="All Statuses">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
             </select>
           </div>
         </div>
@@ -490,7 +547,10 @@ const stats = calculateStats();
                         {new Date(report.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                        <button className="text-emerald-600 hover:text-emerald-900 mr-2 sm:mr-3">
+                        <button 
+                          onClick={() => openViewModal(report)}
+                          className="text-emerald-600 hover:text-emerald-900 mr-2 sm:mr-3"
+                        >
                           View
                         </button>
                         <button className="text-gray-600 hover:text-gray-900 hidden xs:inline">
@@ -539,6 +599,137 @@ const stats = calculateStats();
               </div>
             </div>
           </>
+        )}
+
+        {/* Report View Modal */}
+        {isViewModalOpen && selectedReport && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Report Details</h3>
+                  <button 
+                    onClick={closeViewModal}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <span className="sr-only">Close</span>
+                    <XIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Report Photo */}
+                  {selectedReport.photo && (
+                    <div className="mb-4">
+                      <img 
+                        src={`${backendUrl}${selectedReport.photo}`} 
+                        alt="Report evidence" 
+                        className="w-full h-auto rounded-lg"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Report Details */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Title</p>
+                      <p className="text-sm font-medium">{selectedReport.title}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Reported By</p>
+                      <p className="text-sm font-medium">{selectedReport.userId?.name || "Unknown"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Location</p>
+                      <p className="text-sm font-medium">{selectedReport.location}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Date Reported</p>
+                      <p className="text-sm font-medium">{new Date(selectedReport.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Issue Type</p>
+                      <p className="text-sm font-medium">{selectedReport.issueType}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Current Status</p>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${
+                          selectedReport.status === "Pending"
+                            ? "bg-amber-100 text-amber-800"
+                            : selectedReport.status === "In Progress"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {selectedReport.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-500 mb-1">Description</p>
+                    <p className="text-sm bg-gray-50 p-3 rounded-lg">{selectedReport.description}</p>
+                  </div>
+                  
+                  {/* Status Update */}
+                  <div className="border-t pt-4">
+                    <p className="text-sm font-medium mb-2">Update Status</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        disabled={selectedReport.status === "Pending" || updatingStatus}
+                        onClick={() => updateReportStatus("Pending")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "Pending"
+                            ? "bg-amber-100 text-amber-800 cursor-not-allowed"
+                            : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                        }`}
+                      >
+                        Pending
+                      </button>
+                      <button
+                        disabled={selectedReport.status === "In Progress" || updatingStatus}
+                        onClick={() => updateReportStatus("In Progress")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "In Progress"
+                            ? "bg-blue-100 text-blue-800 cursor-not-allowed"
+                            : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        }`}
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        disabled={selectedReport.status === "Resolved" || updatingStatus}
+                        onClick={() => updateReportStatus("Resolved")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "Resolved"
+                            ? "bg-green-100 text-green-800 cursor-not-allowed"
+                            : "bg-green-100 text-green-800 hover:bg-green-200"
+                        }`}
+                      >
+                        Resolved
+                      </button>
+                    </div>
+                    {updatingStatus && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Updating status...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
+                <button
+                  onClick={closeViewModal}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );

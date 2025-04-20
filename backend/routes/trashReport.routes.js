@@ -21,6 +21,7 @@ const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists
 import fs from 'fs';
+import adminAuth from '../middleware/admin.auth.js';
 const uploadDir = path.join(__dirname, '..', 'public', 'uploads');
 if (!fs.existsSync(path.join(__dirname, '..', 'public'))) {
   fs.mkdirSync(path.join(__dirname, '..', 'public'));
@@ -60,10 +61,10 @@ const upload = multer({
 
 // Routes
 trashReporRouter.get('/get-reports', getAllReports);
-trashReporRouter.get('/my-reports', userAuth, getMyReports);
+trashReporRouter.get('/my-reports', adminAuth, getMyReports);
 trashReporRouter.get('/report-by-id/:id', getReportById);
-trashReporRouter.post('/create-report', userAuth, upload.single('photo'), createReport);
-trashReporRouter.put('/update-report/:id', userAuth, upload.single('photo'), updateReport);
-trashReporRouter.delete('/delete-report/:id', userAuth, deleteReport);
+trashReporRouter.post('/create-report', adminAuth, upload.single('photo'), createReport);
+trashReporRouter.put('/update-report/:id', adminAuth, upload.single('photo'), updateReport);
+trashReporRouter.delete('/delete-report/:id', adminAuth, deleteReport);
 
 export default trashReporRouter;
