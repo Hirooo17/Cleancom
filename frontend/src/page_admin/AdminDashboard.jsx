@@ -23,8 +23,10 @@ import {
 import axios from "axios";
 import { AppContext } from "../context/app.context";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -51,6 +53,129 @@ const AdminDashboard = () => {
   const [searchUserTerm, setSearchUserTerm] = useState("");
   const [currentUserPage, setCurrentUserPage] = useState(1);
   const usersPerPage = 5;
+
+
+  // Settings Use Effects
+
+  const [hierarchyPositions, setHierarchyPositions] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', desc: '' });
+  const [newPosition, setNewPosition] = useState({ title: '', desc: '' });
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch community hierarchy positions
+  const fetchHierarchy = async () => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/community-hierarchy`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        setHierarchyPositions(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching hierarchy:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHierarchy();
+  }, []);
+
+  // Start editing
+  const startEdit = (position) => {
+    setEditingId(position._id);
+    setEditForm({ title: position.title, desc: position.desc });
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({ title: '', desc: '' });
+  };
+
+  // Save edit
+  const saveEdit = async () => {
+    if (!editForm.title.trim() || !editForm.desc.trim()) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/community-hierarchy/${editingId}`,
+        editForm,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        await fetchHierarchy();
+        setEditingId(null);
+        setEditForm({ title: '', desc: '' });
+      }
+    } catch (error) {
+      console.error('Error updating position:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete position
+  const deletePosition = async (id) => {
+    if (!confirm('Are you sure you want to delete this position?')) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.delete(
+        `${backendUrl}/api/community-hierarchy/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        await fetchHierarchy();
+      }
+    } catch (error) {
+      console.error('Error deleting position:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add new position
+  const addPosition = async () => {
+    if (!newPosition.title.trim() || !newPosition.desc.trim()) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/community-hierarchy`,
+        { ...newPosition, order: hierarchyPositions.length + 1 },
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+      if (response.data.success) {
+        await fetchHierarchy();
+        setNewPosition({ title: '', desc: '' });
+        setShowAddForm(false);
+      }
+    } catch (error) {
+      console.error('Error adding position:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   
@@ -110,6 +235,10 @@ useEffect(() => {
 
 
 
+const logout = () => {
+  toast.success("Logged out successfully");
+  navigate("/");
+}
 
 
 
@@ -933,84 +1062,138 @@ const handleDeleteUser = (userId) => {
 
   
 
-  const renderAnnouncements = () => (
-    <div className="space-y-4 sm:space-y-6">
+  const renderSettings = () => (
+      <div className="space-y-4 sm:space-y-6">
+      {/* Community Hierarchy Management */}
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
-          Create New Announcement
-        </h2>
-        <form className="space-y-3 sm:space-y-4">
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-            >
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              className="block w-full rounded-md sm:rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm"
-              placeholder="Announcement title..."
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="content"
-              className="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
-            >
-              Content
-            </label>
-            <textarea
-              id="content"
-              rows={3}
-              className="block w-full rounded-md sm:rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm"
-              placeholder="Announcement content..."
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-            >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              Publish
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+            Community Hierarchy
+          </h2>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700"
+          >
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Add Position
+          </button>
+        </div>
 
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
-          Recent Announcements
-        </h2>
+        {/* Add New Position Form */}
+        {showAddForm && (
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Add New Position</h3>
+            <div className="space-y-3">
+              <div>
+                <input
+                  type="text"
+                  placeholder="Position title..."
+                  value={newPosition.title}
+                  onChange={(e) => setNewPosition({ ...newPosition, title: e.target.value })}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm"
+                />
+              </div>
+              <div>
+                <textarea
+                  placeholder="Position description..."
+                  value={newPosition.desc}
+                  onChange={(e) => setNewPosition({ ...newPosition, desc: e.target.value })}
+                  rows={2}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-3 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addPosition}
+                  disabled={loading || !newPosition.title.trim() || !newPosition.desc.trim()}
+                  className="px-3 py-1.5 bg-emerald-600 text-white text-xs sm:text-sm rounded-md hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {loading ? 'Adding...' : 'Add'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hierarchy List */}
         <div className="space-y-3 sm:space-y-4">
-          {announcements.map((announcement) => (
+          {hierarchyPositions.map((position) => (
             <div
-              key={announcement.id}
+              key={position._id}
               className="p-3 sm:p-4 border border-gray-100 rounded-md sm:rounded-lg hover:border-emerald-200 transition-colors"
             >
-              <div className="flex justify-between items-start">
-                <h3 className="text-sm sm:text-base font-medium text-gray-900">
-                  {announcement.title}
-                </h3>
-                <span className="text-2xs sm:text-xs text-gray-400">
-                  {announcement.date}
-                </span>
-              </div>
-              <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600">
-                {announcement.content}
-              </p>
-              <div className="flex justify-end mt-2 sm:mt-4 space-x-1 sm:space-x-2">
-                <button className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  <Edit2 className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />{" "}
-                  Edit
-                </button>
-                <button className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
-                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />{" "}
-                  Delete
-                </button>
-              </div>
+              {editingId === position._id ? (
+                // Edit Mode
+                <div className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm font-medium"
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      value={editForm.desc}
+                      onChange={(e) => setEditForm({ ...editForm, desc: e.target.value })}
+                      rows={2}
+                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs sm:text-sm"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={cancelEdit}
+                      className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                      <X className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveEdit}
+                      disabled={loading || !editForm.title.trim() || !editForm.desc.trim()}
+                      className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                      {loading ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // View Mode
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-sm sm:text-base font-medium text-gray-900">
+                      {position.title}
+                    </h3>
+                    <div className="flex space-x-1 sm:space-x-2">
+                      <button
+                        onClick={() => startEdit(position)}
+                        className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        <Edit2 className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deletePosition(position._id)}
+                        className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {position.desc}
+                  </p>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -1059,9 +1242,9 @@ const handleDeleteUser = (userId) => {
                   tab: "users",
                 },
                 {
-                  name: "Announcements",
+                  name: "Settings",
                   icon: <Megaphone className="w-5 h-5" />,
-                  tab: "announcements",
+                  tab: "settings",
                 },
               ].map((item) => (
                 <button
@@ -1082,7 +1265,7 @@ const handleDeleteUser = (userId) => {
               ))}
             </nav>
             <div className="mt-auto pt-6">
-              <button className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-lg w-full hover:bg-gray-100 transition-colors">
+              <button onClick={logout} className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-lg w-full hover:bg-gray-100 transition-colors">
                 <LogOut className="w-5 h-5 mr-3" />
                 Logout
               </button>
@@ -1116,9 +1299,9 @@ const handleDeleteUser = (userId) => {
                   tab: "users",
                 },
                 {
-                  name: "Announcements",
+                  name: "Settings",
                   icon: <Megaphone className="w-5 h-5" />,
-                  tab: "announcements",
+                  tab: "settings",
                 },
               ].map((item) => (
                 <button
@@ -1160,7 +1343,7 @@ const handleDeleteUser = (userId) => {
               {activeTab === "dashboard" && "Dashboard"}
               {activeTab === "reports" && "Trash Reports"}
               {activeTab === "users" && "User Management"}
-              {activeTab === "announcements" && "Announcements"}
+              {activeTab === "settings" && "Settings"}
             </h1>
           </div>
           <div className="flex items-center">
@@ -1181,7 +1364,7 @@ const handleDeleteUser = (userId) => {
           {activeTab === "dashboard" && renderDashboard()}
           {activeTab === "reports" && renderReports()}
           {activeTab === "users" && renderUsers()}
-          {activeTab === "announcements" && renderAnnouncements()}
+          {activeTab === "settings" && renderSettings()}
         </div>
       </div>
     </div>

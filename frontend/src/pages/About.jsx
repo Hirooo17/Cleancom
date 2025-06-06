@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Users,
   Shield,
@@ -16,43 +16,110 @@ import {
   MapPin,
 } from "lucide-react";
 import { assets } from "../assets/assets";
+import { useContext } from "react";
+import { AppContext } from "../context/app.context";
+import axios from "axios";
 
 const AboutPage = () => {
-  // Use more descriptive team roles with brief responsibilities
-  const communityHierarchy = [
-    {
-      title: "Community Leader",
-      desc: "Guides community initiatives and long-term vision",
-    },
-    {
-      title: "Eco Council Head",
-      desc: "Coordinates sustainable projects and policies",
-    },
-    {
-      title: "Waste Management",
-      desc: "Oversees recycling and waste reduction programs",
-    },
-    {
-      title: "Green Spaces",
-      desc: "Maintains and expands community green areas",
-    },
-    {
-      title: "Education Team",
-      desc: "Provides environmental awareness resources",
-    },
-    {
-      title: "Health & Safety",
-      desc: "Ensures community wellness and safety standards",
-    },
-    {
-      title: "Rewards Committee",
-      desc: "Manages incentives for community participation",
-    },
-    {
-      title: "Public Relations",
-      desc: "Communicates initiatives to wider audiences",
-    },
-  ];
+  const [communityHierarchy, setCommunityHierarchy] = useState([]);
+  const [loading, setLoading] = useState(true);
+   const { backendUrl, adminData } = useContext(AppContext);
+
+  // Fetch community hierarchy from API
+  useEffect(() => {
+    const fetchCommunityHierarchy = async () => {
+      try {
+      const response = await axios.get(
+        `${backendUrl}/api/community-hierarchy`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+        if (response.data.success) {
+          setCommunityHierarchy(response.data.data);
+        } else {
+          // Fallback to default hierarchy if API fails
+          setCommunityHierarchy([
+            {
+              title: "Community Leader",
+              desc: "Guides community initiatives and long-term vision",
+            },
+            {
+              title: "Eco Council Head",
+              desc: "Coordinates sustainable projects and policies",
+            },
+            {
+              title: "Waste Management",
+              desc: "Oversees recycling and waste reduction programs",
+            },
+            {
+              title: "Green Spaces",
+              desc: "Maintains and expands community green areas",
+            },
+            {
+              title: "Education Team",
+              desc: "Provides environmental awareness resources",
+            },
+            {
+              title: "Health & Safety",
+              desc: "Ensures community wellness and safety standards",
+            },
+            {
+              title: "Rewards Committee",
+              desc: "Manages incentives for community participation",
+            },
+            {
+              title: "Public Relations",
+              desc: "Communicates initiatives to wider audiences",
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching community hierarchy:', error);
+        // Fallback to default hierarchy if API fails
+        setCommunityHierarchy([
+          {
+            title: "Community Leader",
+            desc: "Guides community initiatives and long-term vision",
+          },
+          {
+            title: "Eco Council Head",
+            desc: "Coordinates sustainable projects and policies",
+          },
+          {
+            title: "Waste Management",
+            desc: "Oversees recycling and waste reduction programs",
+          },
+          {
+            title: "Green Spaces",
+            desc: "Maintains and expands community green areas",
+          },
+          {
+            title: "Education Team",
+            desc: "Provides environmental awareness resources",
+          },
+          {
+            title: "Health & Safety",
+            desc: "Ensures community wellness and safety standards",
+          },
+          {
+            title: "Rewards Committee",
+            desc: "Manages incentives for community participation",
+          },
+          {
+            title: "Public Relations",
+            desc: "Communicates initiatives to wider audiences",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunityHierarchy();
+  }, []);
 
   // Statistics with more visual presentation
   const impactStats = [
@@ -107,20 +174,27 @@ const AboutPage = () => {
             Community Structure
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {communityHierarchy.map((role, index) => (
-              <div
-                key={index}
-                className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center"
-              >
-                <Users size={32} className="text-green-600 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {role.title}
-                </h3>
-                <p className="text-gray-600 text-center">{role.desc}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <span className="ml-3 text-gray-600">Loading community structure...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {communityHierarchy.map((role, index) => (
+                <div
+                  key={role._id || index}
+                  className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col items-center"
+                >
+                  <Users size={32} className="text-green-600 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    {role.title}
+                  </h3>
+                  <p className="text-gray-600 text-center">{role.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Location Section */}
@@ -192,7 +266,7 @@ const AboutPage = () => {
                 e.target.onerror = null;
                 // Fallback to inline SVG if the file doesn't load
                 e.target.src =
-                  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiNFQ0ZERjUiLz4KICA8Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjY0IiBmaWxsPSIjNEFERTgwIi8+CiAgPHBhdGggZD0iTTExMCA4MGMzMCAtMjAgNDAgMzAgODAgMTBjMTAgLTUgMzAgLTUgNDAgMGMxMCA1IDE1IDIwIDUgMzBjLTEwIDEwIC00MCAyMCAtNjAgNDBjLTIwIDIwIC0yMCA0MCAtNDAgNDBjLTIwIDAgLTQwIC0yMCAtNDAgLTQwYzAgLTIwIDEwIC00MCAxNSAtNjBaIiBmaWxsPSIjMzREM0NBIi8+Cjwvc3ZnPg==";
+                  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2IiB2aWV3Qm94PSIwIDAgMjU2IDI1NiIgZmlsbD0ibm9uZSI+CiAgPHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9IiNFQ0ZERjUiLz4KICA8Y2lyY2xlIGN4PSIxMjgiIGN5PSIxMjgiIHI9IjY0IiBmaWxsPSIjNEFERTgwIi8+CiAgPHBhdGggZD0iTTExMCA4MGMzMCAtMjAgNDAgMzAgODAgMTBjMTAgLTUgMzAgLTUgNDAgMGMxMCA1IDE1IDIwIDUgMzBjLTEwIDEwIC00MCAyMCAtNjAgNDBjLTIwIDIwIC0yMCA0MCAtNDAgNDBjLTIwIDAgLTQwIC0yMCAtNDAgLTQwYzAgLTIwIDEwIC00MCA1IC02MFoiIGZpbGw9IiMzNEQzQ0EiLz4KPC9zdmc+";
                 console.log("SVG failed to load, using fallback");
               }}
             />
