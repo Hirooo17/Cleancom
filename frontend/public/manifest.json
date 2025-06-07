@@ -1,10 +1,13 @@
 {
   "name": "CleanCom",
   "short_name": "ShortName",
+  "description": "General Community Reporting App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
+  "lang": "en",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon/icon-192.png",
@@ -13,8 +16,14 @@
     },
     {
       "src": "/icon/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/icon/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

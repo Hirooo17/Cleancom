@@ -97,22 +97,10 @@ const Navbar = () => {
             Home
           </button>
           <button
-            onClick={() => navigate("/services")}
-            className="text-green-700 hover:text-green-600 font-medium"
-          >
-            Services
-          </button>
-          <button
             onClick={() => navigate("/about")}
             className="text-green-700 hover:text-green-600 font-medium"
           >
             About
-          </button>
-          <button
-            onClick={() => navigate("/contact")}
-            className="text-green-700 hover:text-green-600 font-medium"
-          >
-            Contact
           </button>
         </div>
 
