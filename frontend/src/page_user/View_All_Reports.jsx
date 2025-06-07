@@ -112,7 +112,7 @@ const ViewAllReports = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-emerald-800 flex items-center gap-2">
             <Trash2 className="w-8 h-8" />
-            All Cleanup Reports
+            All Reports
           </h1>
 
           {/* Back Button */}

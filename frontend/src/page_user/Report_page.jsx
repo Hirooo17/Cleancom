@@ -141,7 +141,7 @@ const ReportPage = () => {
         <div className="flex items-center gap-3 mb-6">
           <Trash2 className="w-8 h-8 text-green-600" />
           <h1 className="text-3xl font-bold text-gray-800">
-            Community Cleanliness Report
+            Community General Report
           </h1>
         </div>
 
