@@ -66,7 +66,7 @@ const Header = () => {
         </h2>
         
         <p className='mb-8 max-w-md text-green-700 text-lg'>
-          Join our community effort to keep our environment clean and sustainable
+          Join our community effort to keep our Barangay safe and clean!
         </p>
         
         <div className='flex gap-4'>
