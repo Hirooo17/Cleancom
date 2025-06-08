@@ -62,7 +62,7 @@ const GetStarted = () => {
       {/* Header section */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-green-800">
+          <h1  onClick={() => navigate('/')} className="text-3xl font-bold text-green-800 cursor-pointer">
             Welcome to CleanTrash
           </h1>
           <p className="text-green-600">
@@ -132,7 +132,7 @@ const GetStarted = () => {
                 <ChevronRight size={18} className="text-red-700" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
+              <button onClick={() => navigate("/formal-complaint")} className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
                 <div className="flex items-center gap-3">
                   <Printer className="text-green-700" size={18} />
                   <span>Print a Formal Complaint</span>

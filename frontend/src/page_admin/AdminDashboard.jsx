@@ -30,9 +30,34 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { backendUrl, adminData } = useContext(AppContext);
+
+
+ // use context
+
+  const { backendUrl, adminData, setAdminData, setAdminIsLogin,  } = useContext(AppContext);
   const [allReports, setAllReports] = useState([]); // Store ALL reports
   const [isLoadingReports, setIsLoadingReports] = useState(true);
+
+const logout = async () => {
+  try {
+    const { data } = await axios.post(
+      backendUrl + "/api/admin/admin-logout",
+      {},
+      { withCredentials: true }
+    );
+    if (data.success){
+      setAdminIsLogin(false)
+      setAdminData(null)
+      toast.success("Logged out successfully");
+      navigate("/");
+    }
+  } catch (error) {
+    console.error("Logout failed:", error);
+    toast.error("Logout failed: " + (error.response?.data?.message || error.message));
+  }
+};
+
+
 
   // reports variables
   const [searchTerm, setSearchTerm] = useState("");
@@ -235,10 +260,6 @@ useEffect(() => {
 
 
 
-const logout = () => {
-  toast.success("Logged out successfully");
-  navigate("/");
-}
 
 
 
