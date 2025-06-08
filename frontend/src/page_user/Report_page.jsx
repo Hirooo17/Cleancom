@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AppContext } from "../context/app.context";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ReportPage = () => {
   const [complaint, setComplaint] = useState({
@@ -24,33 +25,28 @@ const ReportPage = () => {
   });
 
   const { backendUrl, userData } = useContext(AppContext);
-
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   // For the actual file objects that can be sent to the server
   const [fileObjects, setFileObjects] = useState(null);
-  
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setComplaint({ ...complaint, [name]: value });
   };
 
- 
-
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Make sure fileObjects is an array before using spread operator
     const currentFileObjects = Array.isArray(fileObjects) ? fileObjects : [];
-    
+
     setFileObjects([...currentFileObjects, ...files]);
-    
+
     // Create URLs for preview
-    const newImages = files.map(file => URL.createObjectURL(file));
+    const newImages = files.map((file) => URL.createObjectURL(file));
     setComplaint({ ...complaint, images: [...complaint.images, ...newImages] });
   };
-
 
   const removeImage = (index) => {
     const newImages = complaint.images.filter((_, i) => i !== index);
@@ -73,14 +69,13 @@ const ReportPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-       // Check if userData exists
-  //   if (!userData || !userData.userId) {
-  //     alert("You must be logged in to submit a report.");
-  //     console.log("Current userData:", userData);  // Check the user data here
-  //     return;
-  // }
+      // Check if userData exists
+      //   if (!userData || !userData.userId) {
+      //     alert("You must be logged in to submit a report.");
+      //     console.log("Current userData:", userData);  // Check the user data here
+      //     return;
+      // }
 
-     
       console.log("Submitting form with data:", complaint);
       axios.defaults.withCredentials = true;
       const formData = new FormData();
@@ -89,28 +84,25 @@ const ReportPage = () => {
       formData.append("location", complaint.location);
       formData.append("issueType", complaint.issueType);
       formData.append("userId", userData.id); // Add userId to form data
-      
 
-     
+      // Log what's happening with the image
+      console.log("Images array:", complaint.images);
 
-       // Log what's happening with the image
-    console.log("Images array:", complaint.images);
+      // Append the file with the exact field name 'photo'
+      if (fileObjects && fileObjects.length > 0) {
+        formData.append("photo", fileObjects[0]); // Must match Multer's .single('photo')
+      }
 
-    
-
-     // Append the file with the exact field name 'photo'
-     if (fileObjects && fileObjects.length > 0) {
-      formData.append("photo", fileObjects[0]); // Must match Multer's .single('photo')
-    }
-
-    
-
-      const response = await axios.post(backendUrl + '/api/trash-reports/create-report', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        withCredentials: true, // IMPORTANT for cookies!
-      });
+      const response = await axios.post(
+        backendUrl + "/api/trash-reports/create-report",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true, // IMPORTANT for cookies!
+        }
+      );
       console.log("Report submitted successfully:", response.data);
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 3000);
@@ -138,11 +130,21 @@ const ReportPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 md:p-8 transition-all duration-300 hover:shadow-2xl">
-        <div className="flex items-center gap-3 mb-6">
-          <Trash2 className="w-8 h-8 text-green-600" />
-          <h1 className="text-3xl font-bold text-gray-800">
-            Community General Report
-          </h1>
+        {/* Header with title and X button on the far right */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Trash2 className="w-8 h-8 text-green-600" />
+            <h1 className="text-3xl font-bold text-gray-800">
+              Community General Report
+            </h1>
+          </div>
+
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-emerald-50 rounded-lg text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {submitted && (
@@ -167,12 +169,10 @@ const ReportPage = () => {
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
               >
                 <option value="Trash">Littering</option>
-                <option value="Illegal Dumping">Illegal Dumping</option>
+                <option value="Noise Report">Noise Report</option>
                 <option value="Other">Other</option>
               </select>
             </div>
-
-           
           </div>
 
           <div>

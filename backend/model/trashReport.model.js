@@ -28,7 +28,7 @@
     },
     issueType: {
       type: String,
-      enum: ['Littering', 'Illegal Dumping', 'Overflowing Bin', 'Other'],
+      enum: ['Littering', 'Noise Report', 'Lost And Found', 'Other'],
       required: [true, 'Please select an issue type']
     },
     userId: {
