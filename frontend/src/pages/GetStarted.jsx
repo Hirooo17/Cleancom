@@ -8,11 +8,14 @@ import {
   MessageSquare,
   HelpCircle,
   ChevronRight,
-  Trash2,
-  Recycle,
+  AlertTriangle,
+  Shield,
   Info,
   FormInputIcon,
   Printer,
+  Volume2,
+  Search,
+  Users,
 } from "lucide-react";
 import { AppContext } from "../context/app.context";
 import axios from "axios";
@@ -57,16 +60,33 @@ const GetStarted = () => {
 
   const top3Reports = recentReports.slice(0, 3);
 
+  const getReportIcon = (reportType) => {
+    switch (reportType) {
+      case "Noise Complaint":
+        return Volume2;
+      case "Lost and Found":
+        return Search;
+      case "Safety Concern":
+        return Shield;
+      case "Infrastructure Issue":
+        return AlertTriangle;
+      case "Community Event":
+        return Users;
+      default:
+        return AlertTriangle;
+    }
+  };
+
   return (
     <div className="bg-green-50 min-h-screen p-6">
       {/* Header section */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1  onClick={() => navigate('/')} className="text-3xl font-bold text-green-800 cursor-pointer">
-            Welcome to CleanTrash
+            Welcome to Barangay 633
           </h1>
           <p className="text-green-600">
-            Report issues and learn about proper waste management
+            Report community issues and stay connected with your barangay
           </p>
         </div>
         <div className="flex gap-4">
@@ -86,14 +106,14 @@ const GetStarted = () => {
             Your Reports
           </h3>
           <p className="text-3xl font-bold text-green-600">{recentReports.length}</p>
-          <p className="text-green-500 mt-1">1 in progress</p>
+          <p className="text-green-500 mt-1">Active submissions</p>
         </div>
         <div className="bg-white p-6 rounded-xl shadow-sm border border-green-100">
           <h3 className="text-lg font-medium text-green-800 mb-2">
-            Community Impact
+            Community Status
           </h3>
-          <p className="text-3xl font-bold text-green-600">74%</p>
-          <p className="text-green-500 mt-1">Area cleanliness rating</p>
+          <p className="text-3xl font-bold text-green-600">Good</p>
+          <p className="text-green-500 mt-1">Overall community rating</p>
         </div>
       </div>
 
@@ -127,7 +147,7 @@ const GetStarted = () => {
               >
                 <div className="flex items-center gap-3">
                   <MessageSquare className="text-red-700" size={18} />
-                  <span>Submit New Complaint</span>
+                  <span>Submit New Report</span>
                 </div>
                 <ChevronRight size={18} className="text-red-700" />
               </button>
@@ -148,16 +168,16 @@ const GetStarted = () => {
             </h2>
             <button className="w-full flex items-center gap-3 p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800 mb-3">
               <HelpCircle size={18} className="text-green-700" />
-              <span>Waste Management FAQs</span>
+              <span>Barangay Services FAQs</span>
             </button>
             <button className="w-full flex items-center gap-3 p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
               <MessageSquare size={18} className="text-green-700" />
-              <span>Contact Support</span>
+              <span>Contact Barangay Office</span>
             </button>
           </div>
         </div>
 
-        {/* Right panel - Recent activity & waste info */}
+        {/* Right panel - Recent activity & community info */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-green-100">
             <h2 className="text-xl font-bold text-green-800 mb-4">
@@ -168,8 +188,7 @@ const GetStarted = () => {
                 <p className="text-green-600">You have no recent reports.</p>
               ) : (
                 top3Reports.map((item, index) => {
-                  const Icon =
-                    item.issueType === "Illegal Dumping" ? Trash2 : Recycle; // Adjust icon logic as needed
+                  const Icon = getReportIcon(item.issueType || item.category);
 
                   return (
                     <div
@@ -202,58 +221,58 @@ const GetStarted = () => {
 
           <div className="bg-white p-6 rounded-xl shadow-sm border border-green-100">
             <h2 className="text-xl font-bold text-green-800 mb-4">
-              Proper Waste Segregation Guide
+              Common Report Categories
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-green-100 p-4 rounded-lg">
+              <div className="bg-red-100 p-4 rounded-lg">
                 <div className="flex justify-center mb-3">
-                  <div className="bg-green-200 p-3 rounded-full">
-                    <Recycle size={24} className="text-green-700" />
+                  <div className="bg-red-200 p-3 rounded-full">
+                    <AlertTriangle size={24} className="text-red-700" />
                   </div>
                 </div>
-                <h3 className="text-lg font-medium text-center text-green-800 mb-2">
-                  Recyclables
+                <h3 className="text-lg font-medium text-center text-red-800 mb-2">
+                  Safety & Security
                 </h3>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>• Paper & Cardboard</li>
-                  <li>• Plastic Bottles</li>
-                  <li>• Metal Cans</li>
-                  <li>• Glass Containers</li>
+                <ul className="text-sm text-red-700 space-y-1">
+                  <li>• Street Light Issues</li>
+                  <li>• Road Hazards</li>
+                  <li>• Suspicious Activity</li>
+                  <li>• Emergency Situations</li>
                 </ul>
               </div>
 
-              <div className="bg-yellow-100 p-4 rounded-lg">
+              <div className="bg-blue-100 p-4 rounded-lg">
                 <div className="flex justify-center mb-3">
-                  <div className="bg-yellow-200 p-3 rounded-full">
-                    <Trash2 size={24} className="text-yellow-700" />
+                  <div className="bg-blue-200 p-3 rounded-full">
+                    <Volume2 size={24} className="text-blue-700" />
                   </div>
                 </div>
-                <h3 className="text-lg font-medium text-center text-yellow-800 mb-2">
-                  Organic Waste
+                <h3 className="text-lg font-medium text-center text-blue-800 mb-2">
+                  Noise & Disturbance
                 </h3>
-                <ul className="text-sm text-yellow-700 space-y-1">
-                  <li>• Food Scraps</li>
-                  <li>• Garden Waste</li>
-                  <li>• Coffee Grounds</li>
-                  <li>• Eggshells</li>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Loud Music/Parties</li>
+                  <li>• Construction Noise</li>
+                  <li>• Barking Dogs</li>
+                  <li>• Public Disturbance</li>
                 </ul>
               </div>
 
-              <div className="bg-gray-100 p-4 rounded-lg">
+              <div className="bg-purple-100 p-4 rounded-lg">
                 <div className="flex justify-center mb-3">
-                  <div className="bg-gray-200 p-3 rounded-full">
-                    <Trash2 size={24} className="text-gray-700" />
+                  <div className="bg-purple-200 p-3 rounded-full">
+                    <Search size={24} className="text-purple-700" />
                   </div>
                 </div>
-                <h3 className="text-lg font-medium text-center text-gray-800 mb-2">
-                  Non-recyclable
+                <h3 className="text-lg font-medium text-center text-purple-800 mb-2">
+                  Lost & Found
                 </h3>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Styrofoam</li>
-                  <li>• Chip Bags</li>
-                  <li>• Certain Plastics</li>
-                  <li>• Diapers</li>
+                <ul className="text-sm text-purple-700 space-y-1">
+                  <li>• Missing Pets</li>
+                  <li>• Lost Documents</li>
+                  <li>• Found Items</li>
+                  <li>• Missing Persons</li>
                 </ul>
               </div>
             </div>
@@ -262,8 +281,7 @@ const GetStarted = () => {
               <div className="flex items-center gap-3">
                 <Info size={20} className="text-blue-500" />
                 <p className="text-sm text-blue-700">
-                  Learn more about waste management and disposal guidelines in
-                  your area.
+                  For emergency situations, please contact your local authorities immediately. This system is for non-emergency community reports and feedback.
                 </p>
               </div>
             </div>
