@@ -16,7 +16,9 @@ import axios from "axios";
 const ViewAllReports = () => {
   const navigate = useNavigate();
   const { backendUrl, userData } = useContext(AppContext);
-  const [reports, setReports] = useState([]);
+  const [allReports, setAllReports] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [reportToDelete, setReportToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -29,7 +31,7 @@ const ViewAllReports = () => {
           `${backendUrl}/api/trash-reports/my-reports/`,
           { params: { userId: userData.id } }
         );
-        if (data.success) setReports(data.data);
+        if (data.success) setAllReports(data.data);
       } catch (err) {
         console.error("Failed to fetch user reports:", err);
       }
@@ -51,7 +53,7 @@ const ViewAllReports = () => {
       );
 
       if (data.success) {
-        setReports((prev) => prev.filter((r) => r._id !== reportToDelete));
+        setAllReports((prev) => prev.filter((r) => r._id !== reportToDelete));
       }
     } catch (error) {
       console.error("Failed to delete report:", error);
@@ -60,6 +62,21 @@ const ViewAllReports = () => {
       setShowDeleteModal(false);
     }
   };
+
+  const getFilteredReports = () => {
+    return allReports.filter((report) => {
+      const matchesStatus =
+        statusFilter === "All Statuses" ||
+        report.status.toLowerCase() === statusFilter.toLowerCase();
+      return matchesStatus;
+    });
+  };
+
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+  };
+
+  const filteredReports = getFilteredReports();
 
   return (
     <div className="min-h-screen bg-emerald-50 p-4 md:p-8 relative">
@@ -117,7 +134,7 @@ const ViewAllReports = () => {
 
           {/* Back Button */}
           <button
-            onClick={() => navigate("/get-started")} // Navigate to the /get-started page
+            onClick={() => navigate("/get-started")}
             className="p-2 hover:bg-emerald-50 rounded-lg text-gray-600"
           >
             <X className="w-5 h-5" />
@@ -132,64 +149,27 @@ const ViewAllReports = () => {
           </button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {reports.map((report) => (
-            <div
-              key={report._id}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-emerald-100 transition-all border border-emerald-100"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-emerald-900">
-                    {report.locationName}
-                  </h3>
-                  <p className="text-sm text-emerald-600 flex items-center gap-1 mt-1">
-                    <MapPin className="w-4 h-4" />
-                    {report.location}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    report.status === "pending"
-                      ? "bg-amber-100 text-amber-800"
-                      : report.status === "in-progress"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-emerald-100 text-emerald-800"
-                  }`}
-                >
-                  {report.status}
-                </span>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                {report.description}
-              </p>
-
-              <div className="flex items-center justify-between text-sm border-t border-emerald-50 pt-4">
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <CalendarDays className="w-4 h-4" />
-                  {new Date(report.createdAt).toLocaleDateString()}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => navigate(`/edit-report/${report._id}`)}
-                    className="p-2 hover:bg-emerald-50 rounded-lg text-emerald-600 transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => promptDelete(report._id)}
-                    className="p-2 hover:bg-emerald-50 rounded-lg text-red-600 transition-colors"
-                  >
-                    <Trash className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="mb-4">
+          <label
+            htmlFor="statusFilter"
+            className="text-sm font-medium text-emerald-800 mr-2"
+          >
+            Filter by Status:
+          </label>
+          <select
+            id="statusFilter"
+            value={statusFilter}
+            onChange={handleStatusChange}
+            className="pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-no-repeat bg-right"
+          >
+            <option value="All Statuses">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
         </div>
 
-        {reports.length === 0 && (
+        {filteredReports.length === 0 ? (
           <div className="text-center py-12 text-emerald-600">
             <p className="text-lg">No reports found</p>
             <p className="mt-2">Start by creating your first cleanup report!</p>
@@ -200,6 +180,79 @@ const ViewAllReports = () => {
               <Plus className="w-5 h-5" />
               Create Report
             </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white rounded-xl shadow-lg border border-emerald-100">
+            <table className="min-w-full divide-y divide-emerald-50">
+              <thead className="bg-emerald-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-emerald-50">
+                {filteredReports.map((report) => (
+                  <tr
+                    key={report._id}
+                    className="hover:bg-emerald-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {report.location}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                      {report.description}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 flex items-center gap-1">
+                      <CalendarDays className="w-4 h-4" />
+                      {new Date(report.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          report.status.toLowerCase() === "pending"
+                            ? "bg-amber-100 text-amber-800"
+                            : report.status.toLowerCase() === "in-progress"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
+                        {report.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => navigate(`/edit-report/${report._id}`)}
+                          className="p-2 hover:bg-emerald-100 rounded-lg text-emerald-600 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => promptDelete(report._id)}
+                          className="p-2 hover:bg-emerald-100 rounded-lg text-red-600 transition-colors"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 

@@ -27,11 +27,8 @@ const GetStarted = () => {
 
   const [recentReports, setRecentReports] = useState([]);
   
-  
-
   useEffect(() => {
     const fetchMyReports = async () => {
-     
       if (!userData?.id) return;
 
       try {
@@ -41,18 +38,13 @@ const GetStarted = () => {
             userId: userData.id, 
           }
         );
-        
 
         if (data.success) {
           setRecentReports(data.data); 
-          
-          
         }
       } catch (err) {
         console.error("Failed to fetch user reports:", err);
       }
-
-     
     };
 
     fetchMyReports();
@@ -140,7 +132,13 @@ const GetStarted = () => {
                 </div>
                 <ChevronRight size={18} className="text-green-700" />
               </button>
-
+              <button onClick={() => navigate("/feedback")} className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="text-green-700" size={18} />
+                  <span>View Feedback</span>
+                </div>
+                <ChevronRight size={18} className="text-green-700" />
+              </button>
               <button
                 onClick={() => navigate("/report")}
                 className="w-full flex items-center justify-between p-3 bg-red-100 hover:bg-red-200 rounded-lg text-red-800"
@@ -151,7 +149,6 @@ const GetStarted = () => {
                 </div>
                 <ChevronRight size={18} className="text-red-700" />
               </button>
-
               <button onClick={() => navigate("/formal-complaint")} className="w-full flex items-center justify-between p-3 bg-green-100 hover:bg-green-200 rounded-lg text-green-800">
                 <div className="flex items-center gap-3">
                   <Printer className="text-green-700" size={18} />

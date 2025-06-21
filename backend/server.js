@@ -12,6 +12,7 @@
       import adminRouter from "./routes/admin.routes.js";
       import adminDataRouter from "./routes/admin.data.route.js";
 import Communityrouter from "./routes/community.h.routes.js";
+import feedbackRouter from "./routes/feedback.routes.js";
 
       const app = express();
 
@@ -57,10 +58,11 @@ import Communityrouter from "./routes/community.h.routes.js";
       app.use('/api/admin', adminRouter);
       app.use('/api/admin-data', adminDataRouter);
       app.use('/api/community-hierarchy', Communityrouter);
+      app.use('/api/feedback', feedbackRouter);
       // Error handling middleware
       app.use((err, req, res, next) => {
         console.error(err.stack);
-        res.status(500).json({
+        res.status(500).json({  
             success: false,
             message: 'Something went wrong!',
             error: process.env.NODE_ENV === 'development' ? err.message : 'Server error'

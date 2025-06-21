@@ -58,6 +58,61 @@ const logout = async () => {
 };
 
 
+// feedback
+const [feedbackTitle, setFeedbackTitle] = useState('');
+const [feedbackDescription, setFeedbackDescription] = useState('');
+const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+
+const handleSubmitFeedback = async () => {
+  try {
+    setIsSubmittingFeedback(true);
+    
+    const response = await axios.post(
+      `${backendUrl}/api/feedback/create-feedback`,
+      {
+        reportId: selectedReport._id,
+        title: feedbackTitle,
+        description: feedbackDescription,
+        userId: selectedReport.userId._id
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${adminData?.token}`,
+        },
+      }
+    );
+    
+    if (response.data.success) {
+      // Update the report with the new feedback
+      const updatedReport = {
+        ...selectedReport,
+        feedbacks: [...(selectedReport.feedbacks || []), response.data.data]
+      };
+      
+      setSelectedReport(updatedReport);
+      
+      // Update the report in the allReports state
+      const updatedReports = allReports.map(report => 
+        report._id === selectedReport._id ? updatedReport : report
+      );
+      
+      setAllReports(updatedReports);
+      
+      // Clear form
+      setFeedbackTitle('');
+      setFeedbackDescription('');
+      
+      toast.success("Feedback sent successfully");
+    }
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    toast.error("Failed to send feedback: " + (error.response?.data?.message || error.message));
+  } finally {
+    setIsSubmittingFeedback(false);
+  }
+};
+
 
   // reports variables
   const [searchTerm, setSearchTerm] = useState("");
@@ -751,136 +806,222 @@ const stats = calculateStats();
           </>
         )}
 
-        {/* Report View Modal */}
-        {isViewModalOpen && selectedReport && (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Report Details</h3>
-                  <button 
-                    onClick={closeViewModal}
-                    className="text-gray-400 hover:text-gray-500"
-                  >
-                    <span className="sr-only">Close</span>
-                    <XIcon className="h-5 w-5" />
-                  </button>
-                </div>
-                
-                <div className="space-y-4">
-                  {/* Report Photo */}
-                  {selectedReport.photo && (
-                    <div className="mb-4">
-                      <img 
-                        src={`${backendUrl}${selectedReport.photo}`} 
-                        alt="Report evidence" 
-                        className="w-full h-auto rounded-lg"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Report Details */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Title</p>
-                      <p className="text-sm font-medium">{selectedReport.title}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Reported By</p>
-                      <p className="text-sm font-medium">{selectedReport.userId?.name || "Unknown"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Location</p>
-                      <p className="text-sm font-medium">{selectedReport.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Date Reported</p>
-                      <p className="text-sm font-medium">{new Date(selectedReport.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Issue Type</p>
-                      <p className="text-sm font-medium">{selectedReport.issueType}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Current Status</p>
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${
-                          selectedReport.status === "Pending"
-                            ? "bg-amber-100 text-amber-800"
-                            : selectedReport.status === "In Progress"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {selectedReport.status}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Description */}
-                  <div className="mb-6">
-                    <p className="text-xs text-gray-500 mb-1">Description</p>
-                    <p className="text-sm bg-gray-50 p-3 rounded-lg">{selectedReport.description}</p>
-                  </div>
-                  
-                  {/* Status Update */}
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-medium mb-2">Update Status</p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        disabled={selectedReport.status === "Pending" || updatingStatus}
-                        onClick={() => updateReportStatus("Pending")}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                          selectedReport.status === "Pending"
-                            ? "bg-amber-100 text-amber-800 cursor-not-allowed"
-                            : "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                        }`}
-                      >
-                        Pending
-                      </button>
-                      <button
-                        disabled={selectedReport.status === "In Progress" || updatingStatus}
-                        onClick={() => updateReportStatus("In Progress")}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                          selectedReport.status === "In Progress"
-                            ? "bg-blue-100 text-blue-800 cursor-not-allowed"
-                            : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                        }`}
-                      >
-                        In Progress
-                      </button>
-                      <button
-                        disabled={selectedReport.status === "Resolved" || updatingStatus}
-                        onClick={() => updateReportStatus("Resolved")}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                          selectedReport.status === "Resolved"
-                            ? "bg-green-100 text-green-800 cursor-not-allowed"
-                            : "bg-green-100 text-green-800 hover:bg-green-200"
-                        }`}
-                      >
-                        Resolved
-                      </button>
-                    </div>
-                    {updatingStatus && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Updating status...
-                      </p>
-                    )}
-                  </div>
-                </div>
+       {/* Report View Modal */}
+{isViewModalOpen && selectedReport && (
+  <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">Report Details</h3>
+          <button 
+            onClick={closeViewModal}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <span className="sr-only">Close</span>
+            <XIcon className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          {/* Report Photo */}
+          {selectedReport.photo && (
+            <div className="mb-4">
+              <img 
+                src={`${backendUrl}${selectedReport.photo}`} 
+                alt="Report evidence" 
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
+          
+          {/* Report Details */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Title</p>
+              <p className="text-sm font-medium">{selectedReport.title}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Reported By</p>
+              <p className="text-sm font-medium">{selectedReport.userId?.name || "Unknown"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Location</p>
+              <p className="text-sm font-medium">{selectedReport.location}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Date Reported</p>
+              <p className="text-sm font-medium">{new Date(selectedReport.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Issue Type</p>
+              <p className="text-sm font-medium">{selectedReport.issueType}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Current Status</p>
+              <span
+                className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${
+                  selectedReport.status === "Pending"
+                    ? "bg-amber-100 text-amber-800"
+                    : selectedReport.status === "In Progress"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {selectedReport.status}
+              </span>
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div className="mb-6">
+            <p className="text-xs text-gray-500 mb-1">Description</p>
+            <p className="text-sm bg-gray-50 p-3 rounded-lg">{selectedReport.description}</p>
+          </div>
+          
+          {/* Status Update */}
+          <div className="border-t pt-4">
+            <p className="text-sm font-medium mb-2">Update Status</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                disabled={selectedReport.status === "Pending" || updatingStatus}
+                onClick={() => updateReportStatus("Pending")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                  selectedReport.status === "Pending"
+                    ? "bg-amber-100 text-amber-800 cursor-not-allowed"
+                    : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                disabled={selectedReport.status === "In Progress" || updatingStatus}
+                onClick={() => updateReportStatus("In Progress")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                  selectedReport.status === "In Progress"
+                    ? "bg-blue-100 text-blue-800 cursor-not-allowed"
+                    : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                }`}
+              >
+                In Progress
+              </button>
+              <button
+                disabled={selectedReport.status === "Resolved" || updatingStatus}
+                onClick={() => updateReportStatus("Resolved")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                  selectedReport.status === "Resolved"
+                    ? "bg-green-100 text-green-800 cursor-not-allowed"
+                    : "bg-green-100 text-green-800 hover:bg-green-200"
+                }`}
+              >
+                Resolved
+              </button>
+            </div>
+            {updatingStatus && (
+              <p className="text-xs text-gray-500 mt-2">
+                Updating status...
+              </p>
+            )}
+          </div>
+
+          {/* Feedback Section */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium mb-3">Send Feedback to Reporter</h4>
+            
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="feedback-title" className="block text-xs text-gray-500 mb-1">
+                  Feedback Title
+                </label>
+                <input
+                  type="text"
+                  id="feedback-title"
+                  placeholder="E.g. Next steps, Resolution update"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={feedbackTitle}
+                  onChange={(e) => setFeedbackTitle(e.target.value)}
+                />
               </div>
               
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
+              <div>
+                <label htmlFor="feedback-description" className="block text-xs text-gray-500 mb-1">
+                  Detailed Feedback
+                </label>
+                <textarea
+                  id="feedback-description"
+                  rows={4}
+                  placeholder="Provide clear instructions or updates for the reporter..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={feedbackDescription}
+                  onChange={(e) => setFeedbackDescription(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-2">
                 <button
-                  onClick={closeViewModal}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+                  onClick={() => {
+                    setFeedbackTitle('');
+                    setFeedbackDescription('');
+                  }}
+                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
                 >
-                  Close
+                  Clear
+                </button>
+                <button
+                  onClick={handleSubmitFeedback}
+                  disabled={!feedbackTitle || !feedbackDescription || isSubmittingFeedback}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium ${
+                    !feedbackTitle || !feedbackDescription || isSubmittingFeedback
+                      ? 'bg-blue-200 text-blue-700 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {isSubmittingFeedback ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </span>
+                  ) : 'Send Feedback'}
                 </button>
               </div>
             </div>
+            
+            {/* Existing Feedback List (if any) */}
+            {selectedReport.feedbacks?.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium mb-2">Previous Feedback</h4>
+                <div className="space-y-3">
+                  {selectedReport.feedbacks.map((feedback) => (
+                    <div key={feedback._id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="flex justify-between items-start">
+                        <h5 className="text-sm font-medium">{feedback.title}</h5>
+                        <span className="text-xs text-gray-500">
+                          {new Date(feedback.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">{feedback.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
+        <button
+          onClick={closeViewModal}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     );
   };
@@ -1253,7 +1394,7 @@ const handleDeleteUser = (userId) => {
                   tab: "dashboard",
                 },
                 {
-                  name: "Trash Reports",
+                  name: "Reports",
                   icon: <Trash2 className="w-5 h-5" />,
                   tab: "reports",
                 },
@@ -1310,7 +1451,7 @@ const handleDeleteUser = (userId) => {
                   tab: "dashboard",
                 },
                 {
-                  name: "Trash Reports",
+                  name: "Reports",
                   icon: <Trash2 className="w-5 h-5" />,
                   tab: "reports",
                 },
@@ -1362,7 +1503,7 @@ const handleDeleteUser = (userId) => {
             </button>
             <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
               {activeTab === "dashboard" && "Dashboard"}
-              {activeTab === "reports" && "Trash Reports"}
+              {activeTab === "reports" && "Reports"}
               {activeTab === "users" && "User Management"}
               {activeTab === "settings" && "Settings"}
             </h1>

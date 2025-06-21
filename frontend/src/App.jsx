@@ -15,6 +15,7 @@ import AdminDashboard from './page_admin/AdminDashboard'
 import ViewAllReports from './page_user/View_All_Reports'
 import EditReportPage from './page_user/Edit_Report_Page'
 import FormalComplaintGenerator from './page_user/downloadable_report'
+import MyFeedbackPage from './pages/feedback'
 
 
 
@@ -36,6 +37,7 @@ const App = () => {
         <Route path='/view-all-reports' element={<ViewAllReports />} />
         <Route path='/edit-report/:id' element={<EditReportPage />} />
         <Route path='/formal-complaint' element={<FormalComplaintGenerator />} />
+        <Route path='/feedback' element={<MyFeedbackPage />} />
       </Routes>
     </div>
   )
