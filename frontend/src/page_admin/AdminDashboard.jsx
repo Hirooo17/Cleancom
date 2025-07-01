@@ -381,26 +381,30 @@ const stats = calculateStats();
           {
             title: "Total Users",
             value: stats.totalUsers,
+            onClick: () => setActiveTab("users"),
             icon: <Users className="w-5 h-5" />,
             color: "bg-blue-500",
           },
           {
             title: "Total Reports",
             value: stats.totalReports,
-            icon: <FileText className="w-5 h-5" />,
+            icon: <FileText className="w-5 h-5" /> ,
             color: "bg-emerald-500",
+            onClick: () => setActiveTab("reports")
           },
           {
             title: "Pending Reports",
             value: stats.pendingReports,
             icon: <AlertCircle className="w-5 h-5" />,
             color: "bg-amber-500",
+            onClick: () => setActiveTab("reports")
           },
           {
             title: "Resolved Reports",
             value: stats.resolvedReports,
             icon: <ClipboardList className="w-5 h-5" />,
             color: "bg-green-500",
+            onClick: () => setActiveTab("reports")
           },
         ].map((stat, index) => (
           <div
@@ -417,7 +421,8 @@ const stats = calculateStats();
                 </h3>
               </div>
               <div
-                className={`${stat.color} p-2 sm:p-3 rounded-md sm:rounded-lg text-white`}
+                className={`${stat.color} p-2 sm:p-3 rounded-md sm:rounded-lg text-white cursor-pointer hover:opacity-90 transition-opacity`}
+                onClick={stat.onClick}
               >
                 {stat.icon}
               </div>
