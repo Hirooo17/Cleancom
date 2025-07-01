@@ -30,113 +30,97 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-
-
- // use context
-
-  const { backendUrl, adminData, setAdminData, setAdminIsLogin,  } = useContext(AppContext);
-  const [allReports, setAllReports] = useState([]); // Store ALL reports
+  // use context
+  const { backendUrl, adminData, setAdminData, setAdminIsLogin } = useContext(AppContext);
+  const [allReports, setAllReports] = useState([]);
   const [isLoadingReports, setIsLoadingReports] = useState(true);
 
-const logout = async () => {
-  try {
-    const { data } = await axios.post(
-      backendUrl + "/api/admin/admin-logout",
-      {},
-      { withCredentials: true }
-    );
-    if (data.success){
-      setAdminIsLogin(false)
-      setAdminData(null)
-      toast.success("Logged out successfully");
-      navigate("/");
-    }
-  } catch (error) {
-    console.error("Logout failed:", error);
-    toast.error("Logout failed: " + (error.response?.data?.message || error.message));
-  }
-};
-
-
-// feedback
-const [feedbackTitle, setFeedbackTitle] = useState('');
-const [feedbackDescription, setFeedbackDescription] = useState('');
-const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-
-
-const handleSubmitFeedback = async () => {
-  try {
-    setIsSubmittingFeedback(true);
-    
-    const response = await axios.post(
-      `${backendUrl}/api/feedback/create-feedback`,
-      {
-        reportId: selectedReport._id,
-        title: feedbackTitle,
-        description: feedbackDescription,
-        userId: selectedReport.userId._id
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${adminData?.token}`,
-        },
+  const logout = async () => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/admin/admin-logout",
+        {},
+        { withCredentials: true }
+      );
+      if (data.success){
+        setAdminIsLogin(false)
+        setAdminData(null)
+        toast.success("Logged out successfully");
+        navigate("/");
       }
-    );
-    
-    if (response.data.success) {
-      // Update the report with the new feedback
-      const updatedReport = {
-        ...selectedReport,
-        feedbacks: [...(selectedReport.feedbacks || []), response.data.data]
-      };
+    } catch (error) {
+      console.error("Logout failed:", error);
+      toast.error("Logout failed: " + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // feedback
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState('');
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+  const handleSubmitFeedback = async () => {
+    try {
+      setIsSubmittingFeedback(true);
       
-      setSelectedReport(updatedReport);
-      
-      // Update the report in the allReports state
-      const updatedReports = allReports.map(report => 
-        report._id === selectedReport._id ? updatedReport : report
+      const response = await axios.post(
+        `${backendUrl}/api/feedback/create-feedback`,
+        {
+          reportId: selectedReport._id,
+          title: feedbackTitle,
+          description: feedbackDescription,
+          userId: selectedReport.userId._id
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
       );
       
-      setAllReports(updatedReports);
-      
-      // Clear form
-      setFeedbackTitle('');
-      setFeedbackDescription('');
-      
-      toast.success("Feedback sent successfully");
+      if (response.data.success) {
+        const updatedReport = {
+          ...selectedReport,
+          feedbacks: [...(selectedReport.feedbacks || []), response.data.data]
+        };
+        
+        setSelectedReport(updatedReport);
+        const updatedReports = allReports.map(report => 
+          report._id === selectedReport._id ? updatedReport : report
+        );
+        
+        setAllReports(updatedReports);
+        setFeedbackTitle('');
+        setFeedbackDescription('');
+        
+        toast.success("Feedback sent successfully");
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error("Failed to send feedback: " + (error.response?.data?.message || error.message));
+    } finally {
+      setIsSubmittingFeedback(false);
     }
-  } catch (error) {
-    console.error('Error submitting feedback:', error);
-    toast.error("Failed to send feedback: " + (error.response?.data?.message || error.message));
-  } finally {
-    setIsSubmittingFeedback(false);
-  }
-};
-
+  };
 
   // reports variables
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
-      // State for the report view modal
-      const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-      const [selectedReport, setSelectedReport] = useState(null);
-      const [updatingStatus, setUpdatingStatus] = useState(false);
-
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const reportsPerPage = 5;
 
-
-  // user tab  varibles
+  // user tab variables
   const [users, setUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [searchUserTerm, setSearchUserTerm] = useState("");
   const [currentUserPage, setCurrentUserPage] = useState(1);
   const usersPerPage = 5;
 
-
   // Settings Use Effects
-
   const [hierarchyPositions, setHierarchyPositions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', desc: '' });
@@ -257,123 +241,96 @@ const handleSubmitFeedback = async () => {
     }
   };
 
+  // Fetch ALL reports
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await axios.get(
+          `${backendUrl}/api/trash-reports/get-reports`,
+          {
+            headers: {
+              Authorization: `Bearer ${adminData?.token}`,
+            },
+          }
+        );
 
-  
- // Fetch ALL reports
-useEffect(() => {
-  const fetchReports = async () => {
-    try {
-      const response = await axios.get(
-        `${backendUrl}/api/trash-reports/get-reports`,
-        {
-          headers: {
-            Authorization: `Bearer ${adminData?.token}`,
-          },
-        }
-      );
+        const usersResponse = await axios.get(
+          `${backendUrl}/api/auth/count`,
+          { headers: { Authorization: `Bearer ${adminData?.token}` } }
+        );
 
-       // Fetch total users (you'll need to create this endpoint)
-       const usersResponse = await axios.get(
-        `${backendUrl}/api/auth/count`,
-        { headers: { Authorization: `Bearer ${adminData?.token}` } }
-      );
-
-
-
-      const userPage = await axios.get(
-        `${backendUrl}/api/auth/users`, // You'll need to create this endpoint
-        {
-          headers: {
-            Authorization: `Bearer ${adminData?.token}`,
-          },
-        }
-      );
-
-     
+        const userPage = await axios.get(
+          `${backendUrl}/api/auth/users`,
+          {
+            headers: {
+              Authorization: `Bearer ${adminData?.token}`,
+            },
+          }
+        );
       
-      setUsers(userPage.data);
+        setUsers(userPage.data);
 
-      const reportsArray = response.data?.data || [];
-      // Store ALL reports sorted by date (newest first)
-      const sortedReports = reportsArray
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setAllReports(sortedReports);
+        const reportsArray = response.data?.data || [];
+        const sortedReports = reportsArray
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setAllReports(sortedReports);
+        setTotalUsers(usersResponse.data.count || 0);
+        
+      } catch (error) {
+        console.error("Failed to fetch reports:", error);
+      } finally {
+        setIsLoadingReports(false);
+        setIsLoadingUsers(false);
+      }
+    };
 
-      setAllReports(sortedReports);
-      setTotalUsers(usersResponse.data.count || 0);
+    fetchReports();
+  }, []);
+
+  // Get recent 3 reports for dashboard
+  const recentReports = allReports.slice(0, 3);
+
+  // Filter logic for reports tab
+  const getFilteredReports = () => {
+    return allReports.filter(report => {
+      const matchesSearch = searchTerm === '' || 
+        report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (report.userId?.name && report.userId.name.toLowerCase().includes(searchTerm.toLowerCase()));
       
-    } catch (error) {
-      console.error("Failed to fetch reports:", error);
-    } finally {
-      setIsLoadingReports(false);
-      setIsLoadingUsers(false);
-    }
+      const matchesStatus = statusFilter === 'All Statuses' || report.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
   };
 
-  fetchReports();
-}, []);
-
-
-
-
-
-
-
-
-// Get recent 3 reports for dashboard
-const recentReports = allReports.slice(0, 3);
-
-// Filter logic for reports tab
-const getFilteredReports = () => {
-  return allReports.filter(report => {
-    const matchesSearch = searchTerm === '' || 
-      report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (report.userId?.name && report.userId.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'All Statuses' || report.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-};
-
-
-
-
-const calculateStats = () => {
-  return {
-    totalReports: allReports.length,
-    pendingReports: allReports.filter(report => report.status === 'Pending').length,
-    resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
-    totalUsers: totalUsers // Now using the real user count
+  const calculateStats = () => {
+    return {
+      totalReports: allReports.length,
+      unopenedReports: allReports.filter(report => report.status === 'Pending').length,
+      resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
+      totalUsers: totalUsers
+    };
   };
-};
 
-const stats = calculateStats();
-
- 
+  const stats = calculateStats();
 
   const announcements = [
     {
       id: 1,
       title: "Upcoming City Cleanup Day",
-      content:
-        "Join us this Saturday for the annual city cleanup event. Volunteers should meet at City Hall at 8 AM.",
+      content: "Join us this Saturday for the annual city cleanup event. Volunteers should meet at City Hall at 8 AM.",
       date: "2025-04-10",
     },
     {
       id: 2,
       title: "New Recycling Guidelines",
-      content:
-        "Starting May 1st, plastic types 3-7 will no longer be accepted in curbside recycling.",
+      content: "Starting May 1st, plastic types 3-7 will no longer be accepted in curbside recycling.",
       date: "2025-04-05",
     },
   ];
 
-  
-
   const renderDashboard = () => (
-
     <div className="space-y-8">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -388,13 +345,13 @@ const stats = calculateStats();
           {
             title: "Total Reports",
             value: stats.totalReports,
-            icon: <FileText className="w-5 h-5" /> ,
+            icon: <FileText className="w-5 h-5" />,
             color: "bg-emerald-500",
             onClick: () => setActiveTab("reports")
           },
           {
-            title: "Pending Reports",
-            value: stats.pendingReports,
+            title: "Unopened Reports",
+            value: stats.unopenedReports,
             icon: <AlertCircle className="w-5 h-5" />,
             color: "bg-amber-500",
             onClick: () => setActiveTab("reports")
@@ -495,7 +452,7 @@ const stats = calculateStats();
                         : "bg-green-100 text-green-800"
                     }`}
                   >
-                    {report.status}
+                    {report.status === "Pending" ? "Unopened" : report.status}
                   </span>
                 </div>
               ))}
@@ -549,14 +506,6 @@ const stats = calculateStats();
     </div>
   );
 
-  // RENDER REPORTS SECTION TRALALEROTRALALA
-
-  // Filter reports based on search term and status
- 
-
-  
-  
-
   const renderReports = () => {
     const filteredReports = getFilteredReports();
     const indexOfLastReport = currentPage * reportsPerPage;
@@ -564,8 +513,6 @@ const stats = calculateStats();
     const currentReports = filteredReports.slice(indexOfFirstReport, indexOfLastReport);
     const totalPages = Math.ceil(filteredReports.length / reportsPerPage);
     
-
-  
     const handleSearchChange = (e) => {
       setSearchTerm(e.target.value);
       setCurrentPage(1);
@@ -607,8 +554,8 @@ const stats = calculateStats();
           `${backendUrl}/api/trash-reports/update-report/${selectedReport._id}`,
           { 
             status: newStatus,
-            userId: adminData?._id, // Include admin's ID
-            isAdmin: true // Add flag to indicate this is an admin action
+            userId: adminData?._id,
+            isAdmin: true
           },
           {
             headers: {
@@ -618,7 +565,6 @@ const stats = calculateStats();
         );
         
         if (response.data.success) {
-          // Update the report in the local state
           const updatedReports = allReports.map(report => 
             report._id === selectedReport._id 
               ? { ...report, status: newStatus } 
@@ -627,9 +573,7 @@ const stats = calculateStats();
           
           setAllReports(updatedReports);
           setSelectedReport({ ...selectedReport, status: newStatus });
-          
-          // Show success message
-          alert(`Report status updated to ${newStatus}`);
+          alert(`Report status updated to ${newStatus === "Pending" ? "Unopened" : newStatus}`);
         }
       } catch (error) {
         console.error("Failed to update report status:", error);
@@ -664,7 +608,7 @@ const stats = calculateStats();
               className="pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-no-repeat bg-right"
             >
               <option value="All Statuses">All Statuses</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending">Unopened</option>
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
             </select>
@@ -685,40 +629,22 @@ const stats = calculateStats();
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       ID
                     </th>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Title
                     </th>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                       Location
                     </th>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xs:table-cell">
                       Date
                     </th>
-                    <th
-                      scope="col"
-                      className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th scope="col" className="px-3 sm:px-6 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -750,7 +676,7 @@ const stats = calculateStats();
                               : "bg-green-100 text-green-800"
                           }`}
                         >
-                          {report.status}
+                          {report.status === "Pending" ? "Unopened" : report.status}
                         </span>
                       </td>
                       <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
@@ -811,426 +737,412 @@ const stats = calculateStats();
           </>
         )}
 
-       {/* Report View Modal */}
-{isViewModalOpen && selectedReport && (
-  <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-      <div className="p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Report Details</h3>
-          <button 
-            onClick={closeViewModal}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <span className="sr-only">Close</span>
-            <XIcon className="h-5 w-5" />
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          {/* Report Photo */}
-          {selectedReport.photo && (
-            <div className="mb-4">
-              <img 
-                src={`${backendUrl}${selectedReport.photo}`} 
-                alt="Report evidence" 
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
-          )}
-          
-          {/* Report Details */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Title</p>
-              <p className="text-sm font-medium">{selectedReport.title}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Reported By</p>
-              <p className="text-sm font-medium">{selectedReport.userId?.name || "Unknown"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Location</p>
-              <p className="text-sm font-medium">{selectedReport.location}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Date Reported</p>
-              <p className="text-sm font-medium">{new Date(selectedReport.createdAt).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Issue Type</p>
-              <p className="text-sm font-medium">{selectedReport.issueType}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Current Status</p>
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${
-                  selectedReport.status === "Pending"
-                    ? "bg-amber-100 text-amber-800"
-                    : selectedReport.status === "In Progress"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {selectedReport.status}
-              </span>
-            </div>
-          </div>
-          
-          {/* Description */}
-          <div className="mb-6">
-            <p className="text-xs text-gray-500 mb-1">Description</p>
-            <p className="text-sm bg-gray-50 p-3 rounded-lg">{selectedReport.description}</p>
-          </div>
-          
-          {/* Status Update */}
-          <div className="border-t pt-4">
-            <p className="text-sm font-medium mb-2">Update Status</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                disabled={selectedReport.status === "Pending" || updatingStatus}
-                onClick={() => updateReportStatus("Pending")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                  selectedReport.status === "Pending"
-                    ? "bg-amber-100 text-amber-800 cursor-not-allowed"
-                    : "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                }`}
-              >
-                Pending
-              </button>
-              <button
-                disabled={selectedReport.status === "In Progress" || updatingStatus}
-                onClick={() => updateReportStatus("In Progress")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                  selectedReport.status === "In Progress"
-                    ? "bg-blue-100 text-blue-800 cursor-not-allowed"
-                    : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                }`}
-              >
-                In Progress
-              </button>
-              <button
-                disabled={selectedReport.status === "Resolved" || updatingStatus}
-                onClick={() => updateReportStatus("Resolved")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium ${
-                  selectedReport.status === "Resolved"
-                    ? "bg-green-100 text-green-800 cursor-not-allowed"
-                    : "bg-green-100 text-green-800 hover:bg-green-200"
-                }`}
-              >
-                Resolved
-              </button>
-            </div>
-            {updatingStatus && (
-              <p className="text-xs text-gray-500 mt-2">
-                Updating status...
-              </p>
-            )}
-          </div>
-
-          {/* Feedback Section */}
-          <div className="border-t pt-4">
-            <h4 className="text-sm font-medium mb-3">Send Feedback to Reporter</h4>
-            
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="feedback-title" className="block text-xs text-gray-500 mb-1">
-                  Feedback Title
-                </label>
-                <input
-                  type="text"
-                  id="feedback-title"
-                  placeholder="E.g. Next steps, Resolution update"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={feedbackTitle}
-                  onChange={(e) => setFeedbackTitle(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="feedback-description" className="block text-xs text-gray-500 mb-1">
-                  Detailed Feedback
-                </label>
-                <textarea
-                  id="feedback-description"
-                  rows={4}
-                  placeholder="Provide clear instructions or updates for the reporter..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={feedbackDescription}
-                  onChange={(e) => setFeedbackDescription(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => {
-                    setFeedbackTitle('');
-                    setFeedbackDescription('');
-                  }}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={handleSubmitFeedback}
-                  disabled={!feedbackTitle || !feedbackDescription || isSubmittingFeedback}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium ${
-                    !feedbackTitle || !feedbackDescription || isSubmittingFeedback
-                      ? 'bg-blue-200 text-blue-700 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {isSubmittingFeedback ? (
-                    <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Sending...
-                    </span>
-                  ) : 'Send Feedback'}
-                </button>
-              </div>
-            </div>
-            
-            {/* Existing Feedback List (if any) */}
-            {selectedReport.feedbacks?.length > 0 && (
-              <div className="mt-6">
-                <h4 className="text-sm font-medium mb-2">Previous Feedback</h4>
-                <div className="space-y-3">
-                  {selectedReport.feedbacks.map((feedback) => (
-                    <div key={feedback._id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div className="flex justify-between items-start">
-                        <h5 className="text-sm font-medium">{feedback.title}</h5>
-                        <span className="text-xs text-gray-500">
-                          {new Date(feedback.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">{feedback.description}</p>
+        {/* Report View Modal */}
+        {isViewModalOpen && selectedReport && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Report Details</h3>
+                  <button 
+                    onClick={closeViewModal}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <span className="sr-only">Close</span>
+                    <XIcon className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {/* Report Photo */}
+                  {selectedReport.photo && (
+                    <div className="mb-4">
+                      <img 
+                        src={`${backendUrl}${selectedReport.photo}`} 
+                        alt="Report evidence" 
+                        className="w-full h-auto rounded-lg"
+                      />
                     </div>
-                  ))}
+                  )}
+                  
+                  {/* Report Details */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Title</p>
+                      <p className="text-sm font-medium">{selectedReport.title}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Reported By</p>
+                      <p className="text-sm font-medium">{selectedReport.userId?.name || "Unknown"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Location</p>
+                      <p className="text-sm font-medium">{selectedReport.location}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Date Reported</p>
+                      <p className="text-sm font-medium">{new Date(selectedReport.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Issue Type</p>
+                      <p className="text-sm font-medium">{selectedReport.issueType}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Current Status</p>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${
+                          selectedReport.status === "Pending"
+                            ? "bg-amber-100 text-amber-800"
+                            : selectedReport.status === "In Progress"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {selectedReport.status === "Pending" ? "Unopened" : selectedReport.status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="mb-6">
+                    <p className="text-xs text-gray-500 mb-1">Description</p>
+                    <p className="text-sm bg-gray-50 p-3 rounded-lg">{selectedReport.description}</p>
+                  </div>
+                  
+                  {/* Status Update */}
+                  <div className="border-t pt-4">
+                    <p className="text-sm font-medium mb-2">Update Status</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        disabled={selectedReport.status === "Pending" || updatingStatus}
+                        onClick={() => updateReportStatus("Pending")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "Pending"
+                            ? "bg-amber-100 text-amber-800 cursor-not-allowed"
+                            : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                        }`}
+                      >
+                        Mark as Unopened
+                      </button>
+                      <button
+                        disabled={selectedReport.status === "In Progress" || updatingStatus}
+                        onClick={() => updateReportStatus("In Progress")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "In Progress"
+                            ? "bg-blue-100 text-blue-800 cursor-not-allowed"
+                            : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        }`}
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        disabled={selectedReport.status === "Resolved" || updatingStatus}
+                        onClick={() => updateReportStatus("Resolved")}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium ${
+                          selectedReport.status === "Resolved"
+                            ? "bg-green-100 text-green-800 cursor-not-allowed"
+                            : "bg-green-100 text-green-800 hover:bg-green-200"
+                        }`}
+                      >
+                        Resolved
+                      </button>
+                    </div>
+                    {updatingStatus && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Updating status...
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Feedback Section */}
+                  <div className="border-t pt-4">
+                    <h4 className="text-sm font-medium mb-3">Send Feedback to Reporter</h4>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label htmlFor="feedback-title" className="block text-xs text-gray-500 mb-1">
+                          Feedback Title
+                        </label>
+                        <input
+                          type="text"
+                          id="feedback-title"
+                          placeholder="E.g. Next steps, Resolution update"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={feedbackTitle}
+                          onChange={(e) => setFeedbackTitle(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="feedback-description" className="block text-xs text-gray-500 mb-1">
+                          Detailed Feedback
+                        </label>
+                        <textarea
+                          id="feedback-description"
+                          rows={4}
+                          placeholder="Provide clear instructions or updates for the reporter..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={feedbackDescription}
+                          onChange={(e) => setFeedbackDescription(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 pt-2">
+                        <button
+                          onClick={() => {
+                            setFeedbackTitle('');
+                            setFeedbackDescription('');
+                          }}
+                          className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+                        >
+                          Clear
+                        </button>
+                        <button
+                          onClick={handleSubmitFeedback}
+                          disabled={!feedbackTitle || !feedbackDescription || isSubmittingFeedback}
+                          className={`px-4 py-1.5 rounded-md text-sm font-medium ${
+                            !feedbackTitle || !feedbackDescription || isSubmittingFeedback
+                              ? 'bg-blue-200 text-blue-700 cursor-not-allowed'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                          }`}
+                        >
+                          {isSubmittingFeedback ? (
+                            <span className="flex items-center">
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Sending...
+                            </span>
+                          ) : 'Send Feedback'}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Existing Feedback List (if any) */}
+                    {selectedReport.feedbacks?.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-medium mb-2">Previous Feedback</h4>
+                        <div className="space-y-3">
+                          {selectedReport.feedbacks.map((feedback) => (
+                            <div key={feedback._id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                              <div className="flex justify-between items-start">
+                                <h5 className="text-sm font-medium">{feedback.title}</h5>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(feedback.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">{feedback.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
+              
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
+                <button
+                  onClick={closeViewModal}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end rounded-b-lg">
-        <button
-          onClick={closeViewModal}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        )}
       </div>
     );
   };
 
-  // RENDER USERS SECTION TRALALEROTRALALA
-
   // Filter users based on search term
-
-  
-
-// RENDER USERS SECTION
-
-// Filter users based on search term
-const getFilteredUsers = () => {
-  return users.filter(user => 
-    user.name.toLowerCase().includes(searchUserTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchUserTerm.toLowerCase())
-  );
-};
-
-// Pagination logic
-const paginateUsers = (users) => {
-  const indexOfLastUser = currentUserPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  return users.slice(indexOfFirstUser, indexOfLastUser);
-};
-
-const renderUsers = () => {
-  const filteredUsers = getFilteredUsers();
-  const currentUsers = paginateUsers(filteredUsers);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-
-  const handleSearchChange = (e) => {
-    setSearchUserTerm(e.target.value);
-    setCurrentUserPage(1);
+  const getFilteredUsers = () => {
+    return users.filter(user => 
+      user.name.toLowerCase().includes(searchUserTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchUserTerm.toLowerCase())
+    );
   };
 
-  const goToNextPage = () => {
-    if (currentUserPage < totalPages) {  // Fixed: use currentUserPage instead of currentPage
-      setCurrentUserPage(currentUserPage + 1);  // Fixed: use currentUserPage instead of currentPage
-    }
+  // Pagination logic
+  const paginateUsers = (users) => {
+    const indexOfLastUser = currentUserPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    return users.slice(indexOfFirstUser, indexOfLastUser);
   };
 
-  const goToPreviousPage = () => {
-    if (currentUserPage > 1) {  // Fixed: use currentUserPage instead of currentPage
-      setCurrentUserPage(currentUserPage - 1);  // Fixed: use currentUserPage instead of currentPage
-    }
-  };
+  const renderUsers = () => {
+    const filteredUsers = getFilteredUsers();
+    const currentUsers = paginateUsers(filteredUsers);
+    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  return (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
-          User Management
-        </h2>
-        <div className="relative max-w-xs w-full">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+    const handleSearchChange = (e) => {
+      setSearchUserTerm(e.target.value);
+      setCurrentUserPage(1);
+    };
+
+    const goToNextPage = () => {
+      if (currentUserPage < totalPages) {
+        setCurrentUserPage(currentUserPage + 1);
+      }
+    };
+
+    const goToPreviousPage = () => {
+      if (currentUserPage > 1) {
+        setCurrentUserPage(currentUserPage - 1);
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-0">
+            User Management
+          </h2>
+          <div className="relative max-w-xs w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchUserTerm}
+              onChange={handleSearchChange}
+              placeholder="Search users..."
+              className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full"
+            />
           </div>
-          <input
-            type="text"
-            value={searchUserTerm}
-            onChange={handleSearchChange}
-            placeholder="Search users..."
-            className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-gray-300 rounded-md sm:rounded-lg text-xs sm:text-sm focus:ring-emerald-500 focus:border-emerald-500 w-full"
-          />
         </div>
+
+        {isLoadingUsers ? (
+          <div className="flex justify-center items-center py-10">
+            <div className="text-gray-400">Loading users...</div>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="flex justify-center items-center py-10">
+            <div className="text-gray-400">
+              {searchUserTerm ? "No matching users found" : "No users available"}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentUsers.map((user) => (
+                    <tr key={user._id} className="hover:bg-gray-50">
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium">
+                            {user.name.charAt(0)}
+                          </div>
+                          <div className="ml-2 sm:ml-4 min-w-0">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                              {user.name}
+                              {!user.isverified && (
+                                <span className="ml-1 text-2xs text-amber-500">(unverified)</span>
+                              )}
+                            </div>
+                            <div className="text-2xs xs:text-xs text-gray-500 truncate sm:hidden">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
+                        {user.email}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
+                        {user.joinDate}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
+                        <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                          {user.reportCount} {window.innerWidth > 640 ? "reports" : ""}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
+                        <button 
+                          className="text-emerald-600 hover:text-emerald-900 mr-2"
+                          onClick={() => handleViewUser(user._id)}
+                        >
+                          View
+                        </button>
+                        <button 
+                          className="text-gray-600 hover:text-gray-900"
+                          onClick={() => handleDeleteUser(user._id)}
+                        >
+                          Ban
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
+              <div className="text-xs sm:text-sm text-gray-500">
+                Showing <span className="font-medium">
+                {Math.min(currentUserPage * usersPerPage, filteredUsers.length)} 
+                </span> to{" "}
+                <span className="font-medium">
+                {Math.min(currentUserPage * usersPerPage, filteredUsers.length)}
+                </span> of{" "}
+                <span className="font-medium">{filteredUsers.length}</span> results
+              </div>
+              <div className="flex space-x-1 sm:space-x-2">
+                <button 
+                  onClick={goToPreviousPage} 
+                  disabled={currentUserPage === 1}
+                  className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                    currentPage === 1 
+                      ? "text-gray-400 bg-gray-50" 
+                      : "text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" /> Prev
+                </button>
+                <button 
+                  onClick={goToNextPage} 
+                  disabled={currentUserPage === totalPages || totalPages === 0} 
+                  className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
+                    currentPage === totalPages || totalPages === 0
+                      ? "text-gray-400 bg-gray-50" 
+                      : "text-gray-700 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  Next <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+    );
+  };
 
-      {isLoadingUsers ? (
-        <div className="flex justify-center items-center py-10">
-          <div className="text-gray-400">Loading users...</div>
-        </div>
-      ) : filteredUsers.length === 0 ? (
-        <div className="flex justify-center items-center py-10">
-          <div className="text-gray-400">
-            {searchUserTerm ? "No matching users found" : "No users available"}
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              {/* Table Head - unchanged from your code */}
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentUsers.map((user) => (
-                  <tr key={user._id} className="hover:bg-gray-50">
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium">
-                          {user.name.charAt(0)}
-                        </div>
-                        <div className="ml-2 sm:ml-4 min-w-0">
-                          <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
-                            {user.name}
-                            {!user.isverified && (
-                              <span className="ml-1 text-2xs text-amber-500">(unverified)</span>
-                            )}
-                          </div>
-                          <div className="text-2xs xs:text-xs text-gray-500 truncate sm:hidden">
-                            {user.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
-                      {user.email}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden xs:table-cell">
-                      {user.joinDate}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap">
-                      <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                        {user.reportCount} {window.innerWidth > 640 ? "reports" : ""}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                      <button 
-                        className="text-emerald-600 hover:text-emerald-900 mr-2"
-                        onClick={() => handleViewUser(user._id)}
-                      >
-                        View
-                      </button>
-                      <button 
-                        className="text-gray-600 hover:text-gray-900"
-                        onClick={() => handleDeleteUser(user._id)}
-                      >
-                        Ban
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+  const handleViewUser = (userId) => {
+    console.log("View user:", userId);
+  };
 
-          <div className="flex flex-col xs:flex-row items-center justify-between mt-4 sm:mt-6 gap-2">
-            <div className="text-xs sm:text-sm text-gray-500">
-              Showing <span className="font-medium">
-              {Math.min(currentUserPage * usersPerPage, filteredUsers.length)} 
-              </span> to{" "}
-              <span className="font-medium">
-              {Math.min(currentUserPage * usersPerPage, filteredUsers.length)}
-              </span> of{" "}
-              <span className="font-medium">{filteredUsers.length}</span> results
-            </div>
-            <div className="flex space-x-1 sm:space-x-2">
-              <button 
-                onClick={goToPreviousPage} 
-                disabled={currentUserPage === 1}
-                className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
-                  currentPage === 1 
-                    ? "text-gray-400 bg-gray-50" 
-                    : "text-gray-700 bg-white hover:bg-gray-50"
-                }`}
-              >
-                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" /> Prev
-              </button>
-              <button 
-                onClick={goToNextPage} 
-                disabled={currentUserPage === totalPages || totalPages === 0} 
-                className={`inline-flex items-center px-2 sm:px-3 py-1 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "text-gray-400 bg-gray-50" 
-                    : "text-gray-700 bg-white hover:bg-gray-50"
-                }`}
-              >
-                Next <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5 sm:ml-1" />
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// You'll need to implement these handlers
-const handleViewUser = (userId) => {
-  // Navigate to user detail view or show modal
-  console.log("View user:", userId);
-};
-
-const handleDeleteUser = (userId) => {
-  if (window.confirm("Are you sure you want to ban this user?")) {
-    axios.delete(`${backendUrl}/api/auth/delete-users/${userId}`, {
-      headers: { Authorization: `Bearer ${adminData?.token}` }
-    })
-    .then(() => {
-      setUsers(users.filter(user => user.id !== userId));
-      toast.success("User banned successfully");
-    })
-    .catch(error => {
-      console.error("Failed to ban user:", error);
-      toast.error("Failed to ban user");
-    });
-  }
-};
-
-
-  
+  const handleDeleteUser = (userId) => {
+    if (window.confirm("Are you sure you want to ban this user?")) {
+      axios.delete(`${backendUrl}/api/auth/delete-users/${userId}`, {
+        headers: { Authorization: `Bearer ${adminData?.token}` }
+      })
+      .then(() => {
+        setUsers(users.filter(user => user.id !== userId));
+        toast.success("User banned successfully");
+      })
+      .catch(error => {
+        console.error("Failed to ban user:", error);
+        toast.error("Failed to ban user");
+      });
+    }
+  };
 
   const renderSettings = () => (
-      <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Community Hierarchy Management */}
       <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
@@ -1327,8 +1239,7 @@ const handleDeleteUser = (userId) => {
                       disabled={loading || !editForm.title.trim() || !editForm.desc.trim()}
                       className="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
                     >
-                      <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
-                      {loading ? 'Saving...' : 'Save'}
+                      Save
                     </button>
                   </div>
                 </div>
@@ -1486,7 +1397,7 @@ const handleDeleteUser = (userId) => {
               ))}
             </nav>
             <div className="mt-auto pt-6">
-              <button className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-lg w-full hover:bg-gray-100 transition-colors">
+              <button onClick={logout} className="flex items-center px-4 py-3 text-sm font-medium text-gray-600 rounded-lg w-full hover:bg-gray-100 transition-colors">
                 <LogOut className="w-5 h-5 mr-3" />
                 Logout
               </button>
