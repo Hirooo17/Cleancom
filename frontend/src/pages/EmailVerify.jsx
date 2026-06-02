@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { assets } from "../assets/assets";
 import axios from "axios";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -45,7 +45,7 @@ export const EmailVerify = () => {
 
   useEffect(() =>{
       isLogin && userData && userData.isverified && navigate('/')
-  },[isLogin, userData])
+  },[isLogin, userData, navigate])
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-green-100 to-lime-300">

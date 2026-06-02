@@ -1,5 +1,5 @@
 // AdminDashboard.jsx
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
   Users,
   Megaphone,
@@ -21,7 +21,7 @@ import {
   XIcon,
 } from "lucide-react";
 import axios from "axios";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -129,7 +129,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   // Fetch community hierarchy positions
-  const fetchHierarchy = async () => {
+  const fetchHierarchy = useCallback(async () => {
+    if (!backendUrl || !adminData?.token) {
+      setHierarchyPositions([]);
+      return;
+    }
+
     try {
       const response = await axios.get(
         `${backendUrl}/api/community-hierarchy`,
@@ -145,11 +150,11 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching hierarchy:', error);
     }
-  };
+  }, [backendUrl, adminData?.token]);
 
   useEffect(() => {
     fetchHierarchy();
-  }, []);
+  }, [fetchHierarchy]);
 
   // Start editing
   const startEdit = (position) => {
@@ -241,51 +246,57 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchReports = useCallback(async () => {
+    if (!backendUrl || !adminData?.token) {
+      setIsLoadingReports(false);
+      setIsLoadingUsers(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/trash-reports/get-reports`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+
+      const usersResponse = await axios.get(
+        `${backendUrl}/api/auth/count`,
+        { headers: { Authorization: `Bearer ${adminData?.token}` } }
+      );
+
+      const userPage = await axios.get(
+        `${backendUrl}/api/auth/users`,
+        {
+          headers: {
+            Authorization: `Bearer ${adminData?.token}`,
+          },
+        }
+      );
+    
+      setUsers(userPage.data);
+
+      const reportsArray = response.data?.data || [];
+      const sortedReports = reportsArray
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAllReports(sortedReports);
+      setTotalUsers(usersResponse.data.count || 0);
+      
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
+    } finally {
+      setIsLoadingReports(false);
+      setIsLoadingUsers(false);
+    }
+  }, [backendUrl, adminData?.token]);
+
   // Fetch ALL reports
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const response = await axios.get(
-          `${backendUrl}/api/trash-reports/get-reports`,
-          {
-            headers: {
-              Authorization: `Bearer ${adminData?.token}`,
-            },
-          }
-        );
-
-        const usersResponse = await axios.get(
-          `${backendUrl}/api/auth/count`,
-          { headers: { Authorization: `Bearer ${adminData?.token}` } }
-        );
-
-        const userPage = await axios.get(
-          `${backendUrl}/api/auth/users`,
-          {
-            headers: {
-              Authorization: `Bearer ${adminData?.token}`,
-            },
-          }
-        );
-      
-        setUsers(userPage.data);
-
-        const reportsArray = response.data?.data || [];
-        const sortedReports = reportsArray
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setAllReports(sortedReports);
-        setTotalUsers(usersResponse.data.count || 0);
-        
-      } catch (error) {
-        console.error("Failed to fetch reports:", error);
-      } finally {
-        setIsLoadingReports(false);
-        setIsLoadingUsers(false);
-      }
-    };
-
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
   // Get recent 3 reports for dashboard
   const recentReports = allReports.slice(0, 3);

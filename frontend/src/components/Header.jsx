@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppContext } from '../context/app.context';
+import { AppContext } from '../context/app.context.base';
 import { AlertTriangle, Users, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
 

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { assets } from "../assets/assets";
 import { useContext } from "react";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 
 const AboutPage = () => {
@@ -124,7 +124,7 @@ const AboutPage = () => {
     };
 
     fetchCommunityHierarchy();
-  }, []);
+  }, [backendUrl, adminData?.token]);
 
   // Updated statistics for general community improvement
   const impactStats = [

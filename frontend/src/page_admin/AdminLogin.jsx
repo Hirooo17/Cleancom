@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 
 const AdminAuth = () => {

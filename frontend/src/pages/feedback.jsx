@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 import { MessageSquare, ChevronLeft, FileText } from "lucide-react";
 

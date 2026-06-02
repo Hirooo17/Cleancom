@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Edit, X, Upload, Trash2, Check } from 'lucide-react';
-import { AppContext } from '../context/app.context';
+import { AppContext } from '../context/app.context.base';
 import axios from 'axios';
 
 const EditReportPage = () => {

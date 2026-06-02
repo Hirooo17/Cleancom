@@ -17,7 +17,7 @@ import {
   Search,
   Users,
 } from "lucide-react";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 
 const GetStarted = () => {
@@ -35,7 +35,7 @@ const GetStarted = () => {
         const { data } = await axios.get(
           backendUrl + "/api/trash-reports/my-reports/",
           {
-            userId: userData.id, 
+            params: { userId: userData.id },
           }
         );
 
@@ -48,7 +48,7 @@ const GetStarted = () => {
     };
 
     fetchMyReports();
-  }, [userData]);
+  }, [userData, backendUrl]);
 
   const top3Reports = recentReports.slice(0, 3);
 

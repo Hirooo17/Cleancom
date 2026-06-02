@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Navigation,
 } from "lucide-react";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 

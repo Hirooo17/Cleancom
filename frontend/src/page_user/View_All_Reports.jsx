@@ -10,7 +10,7 @@ import {
   X,
   Check,
 } from "lucide-react";
-import { AppContext } from "../context/app.context";
+import { AppContext } from "../context/app.context.base";
 import axios from "axios";
 
 const ViewAllReports = () => {
@@ -37,7 +37,7 @@ const ViewAllReports = () => {
       }
     };
     fetchMyReports();
-  }, [userData]);
+  }, [userData, backendUrl]);
 
   const promptDelete = (reportId) => {
     setReportToDelete(reportId);
